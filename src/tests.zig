@@ -1,3 +1,3 @@
 test {
-    _ = @import("patch/UpsPatcher.zig");
+    _ = @import("patch/Patcher.zig");
 }
