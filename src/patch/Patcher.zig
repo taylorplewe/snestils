@@ -31,7 +31,7 @@ pub fn apply(self: *Patcher) void {
 }
 
 pub fn replaceNTimes(
-    allocator: *std.mem.Allocator,
+    allocator: *const std.mem.Allocator,
     list: *std.ArrayList(u8),
     start: usize,
     len: usize,
@@ -62,7 +62,7 @@ pub fn takeVariableWidthInteger(data: []u8, idx: *usize) usize {
 }
 
 /// Calculates a 32-bit CRC checksum from a slice of bytes.
-fn calcCrc32(data: []const u8) u32 {
+pub fn calcCrc32(data: []const u8) u32 {
     var crc32: u32 = 0xffffffff;
     for (data) |byte| {
         crc32 ^= byte;

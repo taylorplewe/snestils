@@ -38,7 +38,7 @@ fn validate(self: *Patcher) void {
 
     // original ROM checksum
     {
-        const checksum_expected = std.mem.readInt(u32, self.patch_buf[(self.patch_buf.len - 12)..(self.patch_buf.len - 8)], .little);
+        const checksum_expected = std.mem.readVarInt(u32, self.patch_buf[(self.patch_buf.len - 12)..(self.patch_buf.len - 8)], .little);
         const checksum_actual = Patcher.calcCrc32(self.original_rom_buf);
         if (checksum_expected != checksum_actual) {
             fatalFmt("original ROM checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
@@ -49,7 +49,7 @@ fn validate(self: *Patcher) void {
 
     // patch file checksum
     {
-        const checksum_expected = std.mem.readInt(u8, self.patch_buf[(self.patch_buf.len - 4)..], .little);
+        const checksum_expected = std.mem.readVarInt(u8, self.patch_buf[(self.patch_buf.len - 4)..], .little);
         const checksum_actual = Patcher.calcCrc32(self.patch_buf[0 .. self.patch_buf.len - 4]);
         if (checksum_expected != checksum_actual) {
             fatalFmt("patch file checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
@@ -96,10 +96,10 @@ fn apply(self: *Patcher) void {
                     break :blk patch_byte_to_xor ^ original_byte;
                 }
             };
-            if (self.patched_rom_idx >= self.patched_rom.len) {
+            if (self.patched_rom_idx >= self.patched_rom.items.len) {
                 self.patched_rom.append(self.allocator.*, byte_to_write) catch fatal("could not append byte to patched ROM buffer");
             } else {
-                self.patched_rom[self.patched_rom_idx] = byte_to_write;
+                self.patched_rom.items[self.patched_rom_idx] = byte_to_write;
             }
             self.patched_rom_idx += 1;
 
@@ -126,7 +126,7 @@ fn apply(self: *Patcher) void {
     }
 
     // validate patched ROM checksum
-    const checksum_expected = std.mem.readInt(u8, self.patch_buf[(self.patch_buf.len - 8)..(self.patch_buf.len - 4)], .little);
+    const checksum_expected = std.mem.readVarInt(u8, self.patch_buf[(self.patch_buf.len - 8)..(self.patch_buf.len - 4)], .little);
     const checksum_actual = Patcher.calcCrc32(self.patched_rom.items);
     if (checksum_expected != checksum_actual) {
         fatalFmt("patched ROM checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
