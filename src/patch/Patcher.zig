@@ -37,11 +37,18 @@ pub fn replaceNTimes(
     len: usize,
     byte: u8,
 ) std.mem.Allocator.Error!void {
-    const after_range = start + len;
-    const range = list.items[start..after_range];
-    @memset(range, byte);
-    if (range.len < len) {
-        try list.appendNTimes(allocator.*, byte, len - range.len);
+    const replace_len =
+        if (start + len > list.items.len)
+            list.items.len -| start
+        else
+            len;
+    if (replace_len > 0) {
+        const range = list.items[start..(start + replace_len)];
+        @memset(range, byte);
+    }
+    const append_len = len - replace_len;
+    if (append_len > 0) {
+        try list.appendNTimes(allocator.*, byte, append_len);
     }
 }
 
