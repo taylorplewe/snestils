@@ -12,7 +12,6 @@ patched_rom: std.ArrayList(u8),
 
 patch_idx: usize,
 original_rom_idx: usize,
-patched_rom_idx: usize,
 
 pub const VTable = struct {
     /// Validate that the file meets the format criteria

@@ -26,7 +26,6 @@ pub fn init(
         .patched_rom = .fromOwnedSlice(patched_rom_buf),
         .patch_idx = 0,
         .original_rom_idx = 0,
-        .patched_rom_idx = 0,
     };
 }
 
@@ -77,10 +76,8 @@ fn apply(self: *Patcher) void {
         if (bytes_to_skip > 0) {
             if (self.original_rom_idx >= self.original_rom_buf.len) {
                 self.patched_rom.appendNTimes(self.allocator.*, 0, bytes_to_skip) catch fatal("could not write 0s to patched ROM file");
-                self.patched_rom_idx += bytes_to_skip;
             } else {
                 self.original_rom_idx += bytes_to_skip;
-                self.patched_rom_idx += bytes_to_skip;
             }
         }
 
@@ -92,16 +89,15 @@ fn apply(self: *Patcher) void {
                     break :blk patch_byte_to_xor;
                 } else {
                     const original_byte = self.original_rom_buf[self.original_rom_idx];
-                    self.original_rom_idx += 1;
                     break :blk patch_byte_to_xor ^ original_byte;
                 }
             };
-            if (self.patched_rom_idx >= self.patched_rom.items.len) {
+            if (self.original_rom_idx >= self.original_rom_buf.len) {
                 self.patched_rom.append(self.allocator.*, byte_to_write) catch fatal("could not append byte to patched ROM buffer");
             } else {
-                self.patched_rom.items[self.patched_rom_idx] = byte_to_write;
+                self.patched_rom.items[self.original_rom_idx] = byte_to_write;
             }
-            self.patched_rom_idx += 1;
+            self.original_rom_idx += 1;
 
             patch_byte_to_xor = self.patch_buf[self.patch_idx];
             self.patch_idx += 1;
@@ -110,10 +106,8 @@ fn apply(self: *Patcher) void {
         if (self.patch_idx < self.patch_buf.len - 12) {
             if (self.original_rom_idx >= self.original_rom_buf.len) {
                 self.patched_rom.append(self.allocator.*, 0) catch fatal("could not append 0 to patched ROM buffer");
-                self.patched_rom_idx += 1;
             } else {
                 self.original_rom_idx += 1;
-                self.patched_rom_idx += 1;
             }
         }
     }
