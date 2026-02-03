@@ -20,7 +20,7 @@ pub fn main() void {
     const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
 
     if (std.mem.eql(u8, util_name, "info")) {
-        info.displayInfo();
+        info.displayInfo(rom_file);
     } else if (std.mem.eql(u8, util_name, "fix-checksum")) {
         checksum.fixChecksum(rom_file);
     } else if (std.mem.eql(u8, util_name, "split")) {

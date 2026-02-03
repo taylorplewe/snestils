@@ -8,7 +8,7 @@ const possible_header_addrs: []const u24 = &[_]u24{
     0x40ffc0,
 };
 pub fn fixChecksum(rom_file: std.fs.File) void {
-    var reader_buf: [1024]u8 = undefined;
+    var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
     var rom_reader = &rom_reader_core.interface;
 
