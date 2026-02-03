@@ -1,6 +1,7 @@
 const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
+const fatalFmt = disp.fatalFmt;
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
 
 const SnesRomHeader = extern struct {
@@ -16,6 +17,12 @@ const SnesRomHeader = extern struct {
     checksum: u16,
     interrupt_vectors: [16]u16,
 };
+const FormatSpecifier = enum {
+    String,
+    HexNumber16Bit,
+    VersionNumber,
+    KBAmount,
+};
 
 const possible_header_addrs: []const u24 = &[_]u24{
     0x007fc0,
@@ -30,15 +37,26 @@ pub fn displayInfo(rom_file: std.fs.File) void {
 
     for (possible_header_addrs) |addr| {
         if (addr > rom_reader_core.getSize() catch unreachable) {
+            fatalFmt("tried to seek to address {x} but ROM file is only {x}", .{ addr, rom_reader_core.getSize() catch unreachable });
             continue;
         }
         rom_reader_core.seekTo(addr) catch fatal("could not seek file");
 
         var header = rom_reader.takeStruct(SnesRomHeader, .little) catch fatal("could not read header struct");
         if (checkForHeader(&header)) {
-            std.debug.print("Title: {s}\n", .{header.title});
+            // disp.clearAndPrint("\x1b[33m{s:>24}: \x1b[0;1m{s}\x1b[0m\n", .{ "Title", header.title });
+            displayInfoRow("Title", .String, &header.title);
+            displayInfoRow("Checksum", .HexNumber16Bit, header.checksum);
+            displayInfoRow("Checksum complement", .HexNumber16Bit, header.checksum_complement);
+            displayInfoRow("Version", .VersionNumber, header.version);
+            displayInfoRow("ROM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_rom)));
+            displayInfoRow("RAM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_ram)));
+            displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
+            // std.debug.print("Title: {s}\n", .{header.title});
         }
     }
+
+    fatal("SNES ROM header was not found at any of the expected addresses");
 }
 
 fn checkForHeader(header: *SnesRomHeader) bool {
@@ -63,4 +81,49 @@ fn checkForHeader(header: *SnesRomHeader) bool {
     if (header.checksum ^ header.checksum_complement != 0xffff) return false;
 
     return true;
+}
+
+inline fn getChipsetString(chipset: u8) []u8 {
+    const coprocessor = chipset >> 4;
+    const chipset_type = chipset & 0xf;
+
+    var chipset_string_buf: [1024]u8 = undefined;
+
+    const coprocessor_string: []const u8 = if (chipset_type == 3 or chipset_type == 4 or chipset_type == 5 or chipset_type == 6) switch (coprocessor) {
+        0x00 => "DSP",
+        0x01 => "SuperFX",
+        0x02 => "OBC1",
+        0x03 => "SA-1",
+        0x04 => "S-DD1",
+        0x05 => "S-RTC",
+        0x0e => "Other (Super Game Boy/Satellaview)",
+        0x0f => "Custom",
+        else => "Unknown",
+    } else "";
+    const chipset_before = switch (chipset_type) {
+        0x00 => "ROM only",
+        0x01 => "ROM + RAM",
+        0x02 => "ROM + RAM + battery",
+        0x03 => "ROM + ",
+        0x04 => "ROM + ",
+        0x05 => "ROM + ",
+        0x06 => "ROM + ",
+        else => "Unknown",
+    };
+    const chipset_after = switch (chipset_type) {
+        0x04 => " + RAM",
+        0x05 => " + RAM + battery",
+        0x06 => " + battery",
+        else => "",
+    };
+    return std.fmt.bufPrint(&chipset_string_buf, "{s}{s}{s}", .{ chipset_before, coprocessor_string, chipset_after }) catch fatal("could not print to chipset string buffer");
+}
+
+fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
+    switch (T) {
+        .String => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m{s}\x1b[0m\n", .{ key, value }),
+        .HexNumber16Bit => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m0x{x:0>4}\x1b[0m\n", .{ key, value }),
+        .VersionNumber => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m1.{d}\x1b[0m\n", .{ key, value }),
+        .KBAmount => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m{d} KB\x1b[0m\n", .{ key, value }),
+    }
 }
