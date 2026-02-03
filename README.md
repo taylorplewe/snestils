@@ -6,8 +6,9 @@ A CLI that encompasses a suite of utilities for working with Super Nintendo/Supe
 | - | - |
 | `fix-checksum` | Fix the internal ROM's checksum and complement |
 | `split` | Split the ROM file into different size chunks, for writing to various (E)EPROMs |
-| `patch` | Apply a patch file to a ROM. Supported patch types |
+| `patch` | Apply a patch file to a ROM |
 
 ### Supported patch file types
 - IPS
 - UPS
+- BPS
