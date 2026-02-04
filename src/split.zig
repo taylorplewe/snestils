@@ -2,7 +2,7 @@ const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
 
-pub fn split(allocator: std.mem.Allocator, rom_file: std.fs.File, rom_file_path: []const u8) void {
+pub fn split(allocator: *const std.mem.Allocator, rom_file: std.fs.File, rom_file_path: []const u8) void {
     // get size in KiB from user
     var targ_size_input: []u8 = undefined;
     var targ_size: u64 = 0;
@@ -41,7 +41,7 @@ pub fn split(allocator: std.mem.Allocator, rom_file: std.fs.File, rom_file_path:
     const rom_file_ext = rom_file_path[last_index_of_period..];
 
     while (remaining_size > 0) : (remaining_size -= targ_size) {
-        const split_file_path = std.fmt.allocPrint(allocator, "{s}_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
+        const split_file_path = std.fmt.allocPrint(allocator.*, "{s}_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
         const split_file = std.fs.cwd().createFile(split_file_path, .{}) catch
             fatal("could not create split file");
         defer split_file.close();

@@ -20,11 +20,11 @@ pub fn main() void {
     const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
 
     if (std.mem.eql(u8, util_name, "info")) {
-        info.displayInfo(rom_file);
+        info.displayInfo(&arena.allocator(), rom_file);
     } else if (std.mem.eql(u8, util_name, "fix-checksum")) {
         checksum.fixChecksum(rom_file);
     } else if (std.mem.eql(u8, util_name, "split")) {
-        split.split(arena.allocator(), rom_file, rom_path);
+        split.split(&arena.allocator(), rom_file, rom_path);
     } else if (std.mem.eql(u8, util_name, "patch")) {
         patch.patch(&arena.allocator(), args[2..]);
     } else {

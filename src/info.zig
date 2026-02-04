@@ -4,6 +4,8 @@ const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
 
+const KEY_WIDTH = "20";
+
 const SnesRomHeader = extern struct {
     title: [21]u8,
     mode: u8,
@@ -19,6 +21,7 @@ const SnesRomHeader = extern struct {
 };
 const FormatSpecifier = enum {
     String,
+    HexNumber,
     HexNumber16Bit,
     VersionNumber,
     KBAmount,
@@ -30,7 +33,7 @@ const possible_header_addrs: []const u24 = &[_]u24{
     0x40ffc0,
 };
 
-pub fn displayInfo(rom_file: std.fs.File) void {
+pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) void {
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
     var rom_reader = &rom_reader_core.interface;
@@ -55,6 +58,27 @@ pub fn displayInfo(rom_file: std.fs.File) void {
             displayInfoRow("Speed", .String, getSpeedString(header.mode));
             displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
             // std.debug.print("Title: {s}\n", .{header.title});
+
+            disp.clearAndPrint("", .{});
+            disp.clearAndPrint("\n{s:>" ++ KEY_WIDTH ++ "}\n", .{"Hashes"});
+            disp.printLoading("calculating hashes");
+
+            rom_reader_core.seekTo(0) catch fatal("could not reset seek position of ROM reader");
+            const rom = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");
+            defer allocator.free(rom);
+
+            // get various hashes of ROM data
+            var md5: [16]u8 = undefined;
+            var sha1: [20]u8 = undefined;
+            var sha256: [32]u8 = undefined;
+            const crc32 = std.hash.Crc32.hash(rom);
+            std.crypto.hash.Md5.hash(rom, &md5, .{});
+            std.crypto.hash.Sha1.hash(rom, &sha1, .{});
+            std.crypto.hash.sha2.Sha256.hash(rom, &sha256, .{});
+            displayInfoRow("CRC32", .HexNumber, crc32);
+            displayInfoRow("MD5", .HexNumber, md5);
+            displayInfoRow("SHA1", .HexNumber, sha1);
+            displayInfoRow("SHA256", .HexNumber, sha256);
 
             return;
         }
@@ -142,11 +166,13 @@ inline fn getChipsetString(chipset: u8) []u8 {
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
-    const KEY_WIDTH = "20";
+    const BEFORE_SPECIFIER = "\x1b[33m{s:>" ++ KEY_WIDTH ++ "} \x1b[0;1m";
+    const AFTER_SPECIFIER = "\x1b[0m\n";
     switch (T) {
-        .String => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m{s}\x1b[0m\n", .{ key, value }),
-        .HexNumber16Bit => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m0x{x:0>4}\x1b[0m\n", .{ key, value }),
-        .VersionNumber => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m1.{d}\x1b[0m\n", .{ key, value }),
-        .KBAmount => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m{d} KB\x1b[0m\n", .{ key, value }),
+        .String => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .HexNumber16Bit => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x:0>4}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .VersionNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .KBAmount => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} KB" ++ AFTER_SPECIFIER, .{ key, value }),
     }
 }
