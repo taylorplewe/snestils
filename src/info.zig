@@ -2,9 +2,11 @@ const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
+const checksum = @import("checksum.zig");
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
 
-const KEY_WIDTH = "20";
+const KEY_WIDTH = 20;
+const KEY_WIDTH_FMT = std.fmt.comptimePrint("{d}", .{KEY_WIDTH});
 
 const SnesRomHeader = extern struct {
     title: [21]u8,
@@ -24,7 +26,8 @@ const FormatSpecifier = enum {
     HexNumber,
     HexNumber16Bit,
     VersionNumber,
-    KBAmount,
+    RomSize,
+    RamSize,
 };
 
 const possible_header_addrs: []const u24 = &[_]u24{
@@ -47,25 +50,38 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) v
 
         var header = rom_reader.takeStruct(SnesRomHeader, .little) catch fatal("could not read header struct");
         if (checkForHeader(&header)) {
-            // disp.clearAndPrint("\x1b[33m{s:>24}: \x1b[0;1m{s}\x1b[0m\n", .{ "Title", header.title });
-            displayInfoRow("Title", .String, &header.title);
-            displayInfoRow("Checksum", .HexNumber16Bit, header.checksum);
-            displayInfoRow("Checksum complement", .HexNumber16Bit, header.checksum_complement);
-            displayInfoRow("Version", .VersionNumber, header.version);
-            displayInfoRow("ROM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_rom)));
-            displayInfoRow("RAM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_ram)));
-            displayInfoRow("Mapping", .String, getMappingString(header.mode));
-            displayInfoRow("Speed", .String, getSpeedString(header.mode));
-            displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
-            // std.debug.print("Title: {s}\n", .{header.title});
-
-            disp.clearAndPrint("", .{});
-            disp.clearAndPrint("\n{s:>" ++ KEY_WIDTH ++ "}\n", .{"Hashes"});
-            disp.printLoading("calculating hashes");
-
             rom_reader_core.seekTo(0) catch fatal("could not reset seek position of ROM reader");
             const rom = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");
             defer allocator.free(rom);
+
+            disp.clearAndPrint("\n{s:>" ++ KEY_WIDTH_FMT ++ "}\n\n", .{"Header"});
+
+            const internal_rom_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(header.size_rom));
+            const internal_ram_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(header.size_ram));
+            const internal_rom_size_megabits = (internal_rom_size_kilobytes * 8) / 1024;
+            const internal_ram_size_kilobits = internal_ram_size_kilobytes * 8;
+            displayInfoRow("Title", .String, &header.title);
+            displayInfoRow("Version", .VersionNumber, header.version);
+            displayInfoRow("ROM size", .RomSize, internal_rom_size_megabits);
+            displayInfoRow("RAM size", .RamSize, internal_ram_size_kilobits);
+            displayInfoRow("Mapping", .String, getMappingString(header.mode));
+            displayInfoRow("Speed", .String, getSpeedString(header.mode));
+            displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
+
+            // compare internal checksum to calculated checksum
+            const checksum_calculated = checksum.calcChecksum(rom);
+            const checksum_compl_calculated = checksum_calculated ^ 0xffff;
+            const OK = "\x1b[32;1mOK\x1b[0m";
+            const BAD = "\x1b[31;1mBAD\x1b[0m";
+            displayInfoRow("Checksum", .String, if (checksum_calculated == header.checksum) OK else BAD);
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[1m0x{x:0>4}\x1b[0m\n", .{checksum_calculated});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[1m0x{x:0>4}\x1b[0m\n", .{header.checksum});
+            displayInfoRow("Checksum complement", .String, if (checksum_compl_calculated == header.checksum_complement) OK else BAD);
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[1m0x{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[1m0x{x:0>4}\x1b[0m\n", .{header.checksum_complement});
+
+            disp.clearAndPrint("\n\n{s:>" ++ KEY_WIDTH_FMT ++ "}\n\n", .{"Hashes"});
+            disp.printLoading("calculating hashes");
 
             // get various hashes of ROM data
             var md5: [16]u8 = undefined;
@@ -166,13 +182,14 @@ inline fn getChipsetString(chipset: u8) []u8 {
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
-    const BEFORE_SPECIFIER = "\x1b[33m{s:>" ++ KEY_WIDTH ++ "} \x1b[0;1m";
+    const BEFORE_SPECIFIER = "\x1b[33m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m";
     const AFTER_SPECIFIER = "\x1b[0m\n";
     switch (T) {
         .String => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
         .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .HexNumber16Bit => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x:0>4}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .KBAmount => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} KB" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RomSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} Mb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RamSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} Kb" ++ AFTER_SPECIFIER, .{ key, value }),
     }
 }

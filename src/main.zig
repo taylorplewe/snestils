@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
@@ -22,7 +23,7 @@ pub fn main() void {
     if (std.mem.eql(u8, util_name, "info")) {
         info.displayInfo(&arena.allocator(), rom_file);
     } else if (std.mem.eql(u8, util_name, "fix-checksum")) {
-        checksum.fixChecksum(rom_file);
+        checksum.fixChecksum(&arena.allocator(), rom_file);
     } else if (std.mem.eql(u8, util_name, "split")) {
         split.split(&arena.allocator(), rom_file, rom_path);
     } else if (std.mem.eql(u8, util_name, "patch")) {
@@ -33,13 +34,18 @@ pub fn main() void {
 }
 
 fn printUsageAndExit() noreturn {
-    disp.clearAndPrint("\x1b[1;33msnestils.exe:\x1b[0m modify an SNES ROM\n" ++
-        "usage: \x1b[34msnestils <util> <path-to-rom>\x1b[0m\n" ++
-        "  \x1b[34m<util> \x1b[0m=\n" ++
-        "    \x1b[33minfo\x1b[0m - print out all the information about a ROM according to its header\n" ++
-        "    \x1b[33mfix-checksum\x1b[0m - calculate the ROM's correct checksum and write it to the ROM's header\n" ++
-        "    \x1b[33msplit\x1b[0m - repeat a ROM's contents to fill a certain amount of memory\n" ++
-        "    \x1b[33mpatch\x1b[0m - apply an IPS patch file to a ROM\n" ++
-        "    \x1b[33mremove-header\x1b[0m - remove a ROM's header\n", .{});
+    const EXE = if (builtin.os.tag == .windows) ".exe" else "";
+    const TAB = "    ";
+    disp.clearAndPrint("\x1b[1;33msnestils" ++ EXE ++ "\x1b[0m - modify an SNES ROM\n" ++
+        "\n" ++
+        "Usage:\n" ++
+        TAB ++ "\x1b[0msnestils" ++ EXE ++ " <util> <path-to-rom> [path-to-patch-file]\n" ++
+        "\n" ++
+        "Utils:\n" ++
+        TAB ++ "\x1b[33minfo\x1b[0m - print out information about a ROM\n" ++
+        TAB ++ "\x1b[33mfix-checksum\x1b[0m - calculate the ROM's correct checksum and write it to the ROM's internal header\n" ++
+        TAB ++ "\x1b[33msplit\x1b[0m - repeat a ROM's contents to fill a certain amount of memory\n" ++
+        TAB ++ "\x1b[33mpatch\x1b[0m - apply an IPS patch file to a ROM\n" ++
+        TAB ++ "\x1b[33mremove-header\x1b[0m - remove a ROM's header\n", .{});
     std.process.exit(0);
 }

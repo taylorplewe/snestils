@@ -1,3 +1,5 @@
+//! An interface which any patch format must implement
+
 const std = @import("std");
 const disp = @import("../disp.zig");
 const fatal = disp.fatal;
@@ -68,6 +70,11 @@ pub fn takeVariableWidthInteger(data: []u8, idx: *usize) usize {
 }
 
 /// Calculates a 32-bit CRC checksum from a slice of bytes.
+/// I am aware of std.hash.Crc32--see `src/info.zig` for an example of it in use
+///
+/// I didn't hear about it until after I had already written my own implemnetation here. I'm keeping this around because
+/// - It's a much simpler implementation than that in the standard library
+/// - It taught me about unit testing in Zig and generating a static table at comptime, both of which I'm not ready to just throw away
 pub fn calcCrc32(data: []const u8) u32 {
     var crc32: u32 = 0xffffffff;
     for (data) |byte| {

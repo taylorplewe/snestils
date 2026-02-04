@@ -7,18 +7,15 @@ const possible_header_addrs: []const u24 = &[_]u24{
     0x00ffc0,
     0x40ffc0,
 };
-pub fn fixChecksum(rom_file: std.fs.File) void {
+pub fn fixChecksum(allocator: *const std.mem.Allocator, rom_file: std.fs.File) void {
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
     var rom_reader = &rom_reader_core.interface;
-
-    var checksum: u16 = 0;
+    const rom = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not read ROM file into buffer for checksum fixing");
 
     // calculate checksum
     disp.printLoading("calculating checksum");
-    while (true) {
-        checksum +%= rom_reader.takeByte() catch break;
-    }
+    const checksum = calcChecksum(rom);
     disp.clearAndPrint("checksum: \x1b[33m0x{x}\x1b[0m\n", .{checksum});
 
     // write checksum to ROM header
@@ -41,6 +38,14 @@ pub fn fixChecksum(rom_file: std.fs.File) void {
         }
     }
     fatal("could not find header in ROM\n  a ROM header must meet the criteria as described at \x1b]8;;https://snes.nesdev.org/wiki/ROM_header\x1b\\https://snes.nesdev.org/wiki/ROM_header\x1b]8;;\x1b\\");
+}
+
+pub fn calcChecksum(rom: []u8) u16 {
+    var checksum: u16 = 0;
+    for (rom) |byte| {
+        checksum +%= byte;
+    }
+    return checksum;
 }
 
 fn checkForHeader(memory: []u8) bool {
