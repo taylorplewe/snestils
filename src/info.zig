@@ -51,8 +51,12 @@ pub fn displayInfo(rom_file: std.fs.File) void {
             displayInfoRow("Version", .VersionNumber, header.version);
             displayInfoRow("ROM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_rom)));
             displayInfoRow("RAM size", .KBAmount, @as(u32, 1) << @as(u5, @intCast(header.size_ram)));
+            displayInfoRow("Mapping", .String, getMappingString(header.mode));
+            displayInfoRow("Speed", .String, getSpeedString(header.mode));
             displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
             // std.debug.print("Title: {s}\n", .{header.title});
+
+            return;
         }
     }
 
@@ -81,6 +85,24 @@ fn checkForHeader(header: *SnesRomHeader) bool {
     if (header.checksum ^ header.checksum_complement != 0xffff) return false;
 
     return true;
+}
+
+inline fn getMappingString(mode: u8) []const u8 {
+    return if (mode & 0x0f == 0)
+        "LoROM"
+    else if (mode & 0x0f == 1)
+        "HiROM"
+    else if (mode & 0x0f == 5)
+        "ExHiROM"
+    else
+        "Unknown";
+}
+
+inline fn getSpeedString(mode: u8) []const u8 {
+    return if (mode & 0b0001_0000 != 0)
+        "FastROM"
+    else
+        "SlowROM";
 }
 
 inline fn getChipsetString(chipset: u8) []u8 {
@@ -120,10 +142,11 @@ inline fn getChipsetString(chipset: u8) []u8 {
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
+    const KEY_WIDTH = "20";
     switch (T) {
-        .String => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m{s}\x1b[0m\n", .{ key, value }),
-        .HexNumber16Bit => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m0x{x:0>4}\x1b[0m\n", .{ key, value }),
-        .VersionNumber => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m1.{d}\x1b[0m\n", .{ key, value }),
-        .KBAmount => disp.clearAndPrint("\x1b[33m{s:>20}: \x1b[0;1m{d} KB\x1b[0m\n", .{ key, value }),
+        .String => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m{s}\x1b[0m\n", .{ key, value }),
+        .HexNumber16Bit => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m0x{x:0>4}\x1b[0m\n", .{ key, value }),
+        .VersionNumber => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m1.{d}\x1b[0m\n", .{ key, value }),
+        .KBAmount => disp.clearAndPrint("\x1b[33m{s:>" ++ KEY_WIDTH ++ "}: \x1b[0;1m{d} KB\x1b[0m\n", .{ key, value }),
     }
 }
