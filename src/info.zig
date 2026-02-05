@@ -14,7 +14,7 @@ const SnesRomHeader = extern struct {
     chipset: u8,
     size_rom: u8,
     size_ram: u8,
-    country: u8,
+    region: Region,
     publisher_id: u8,
     version: u8,
     checksum_complement: u16,
@@ -29,11 +29,53 @@ const FormatSpecifier = enum {
     RomSize,
     RamSize,
 };
+/// Follows naming convention from the official SNES development manual page 1-2-20
+const Region = enum(u8) {
+    Japan,
+    NorthAmerica,
+    AllOfEurope,
+    Scandinavia,
+    French = 6,
+    Dutch,
+    Spanish,
+    German,
+    Italian,
+    Chinese,
+    Korean,
+    Common,
+    Canada,
+    Brazil,
+    Australia,
+    OtherX,
+    OtherY,
+    OtherZ,
+
+    fn getDisplayName(self: Region) []const u8 {
+        return switch (self) {
+            .Japan => "NTSC (Japan)",
+            .NorthAmerica => "NTSC (North America)",
+            .AllOfEurope => "PAL (Europe)",
+            .Scandinavia => "PAL (Scandinavia)",
+            .French => "PAL (French)",
+            .Dutch => "PAL (Dutch)",
+            .Spanish => "PAL (Spanish)",
+            .German => "PAL (German)",
+            .Italian => "PAL (Italian)",
+            .Chinese => "PAL (Chinese)",
+            .Korean => "NTSC (Korean)",
+            .Common => "Common",
+            .Canada => "NTSC (Canada)",
+            .Brazil => "PAL (Brazil)",
+            .Australia => "PAL (Australia)",
+            else => "Other",
+        };
+    }
+};
 
 const possible_header_addrs: []const u24 = &[_]u24{
-    0x007fc0,
-    0x00ffc0,
     0x40ffc0,
+    0x00ffc0,
+    0x007fc0,
 };
 
 pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) void {
@@ -42,13 +84,12 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) v
     var rom_reader = &rom_reader_core.interface;
 
     for (possible_header_addrs) |addr| {
-        if (addr > rom_reader_core.getSize() catch unreachable) {
-            fatalFmt("tried to seek to address {x} but ROM file is only {x}", .{ addr, rom_reader_core.getSize() catch unreachable });
+        if (addr > rom_reader_core.getSize() catch fatal("could not get size of ROM file")) {
             continue;
         }
         rom_reader_core.seekTo(addr) catch fatal("could not seek file");
 
-        var header = rom_reader.takeStruct(SnesRomHeader, .little) catch fatal("could not read header struct");
+        var header = rom_reader.takeStruct(SnesRomHeader, .little) catch continue;
         if (checkForHeader(&header)) {
             rom_reader_core.seekTo(0) catch fatal("could not reset seek position of ROM reader");
             const rom = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");
@@ -60,9 +101,12 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) v
             const internal_ram_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(header.size_ram));
             const internal_rom_size_megabits = (internal_rom_size_kilobytes * 8) / 1024;
             const internal_ram_size_kilobits = internal_ram_size_kilobytes * 8;
+            const physical_rom_size_megabits = (((rom.len * 8) / 1024) / 1024);
             displayInfoRow("Title", .String, &header.title);
             displayInfoRow("Version", .VersionNumber, header.version);
-            displayInfoRow("ROM size", .RomSize, internal_rom_size_megabits);
+            displayInfoRow("Region", .String, header.region.getDisplayName());
+            displayInfoRow("ROM size", .RomSize, physical_rom_size_megabits);
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb\n", .{internal_rom_size_megabits});
             displayInfoRow("RAM size", .RamSize, internal_ram_size_kilobits);
             displayInfoRow("Mapping", .String, getMappingString(header.mode));
             displayInfoRow("Speed", .String, getSpeedString(header.mode));
@@ -105,15 +149,23 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) v
 
 fn checkForHeader(header: *SnesRomHeader) bool {
     // ascii name of ROM
+    // std.debug.print("title: {s}\n", .{header.title});
+    // std.debug.print("hex title: {x}\n", .{header.title});
     for (header.title) |byte| {
-        if (!std.ascii.isAlphabetic(byte) and !std.ascii.isWhitespace(byte) and byte != 0)
+        if (!std.ascii.isAlphanumeric(byte) and !std.ascii.isWhitespace(byte) and byte != 0)
             return false;
     }
+    // std.debug.print("here\n", .{});
 
     // mapper mode byte
     if (header.mode & 0b11100000 != 0b00100000) return false;
+    // std.debug.print("here 2\n", .{});
     const map_mode = header.mode & 0x0f;
+    // std.debug.print("map mode: {d}\n", .{map_mode});
+    // std.debug.print("header.mode: {x}\n", .{header.mode});
     if (map_mode != 0 and map_mode != 1 and map_mode != 5) return false;
+
+    // std.debug.print("here 3\n", .{});
 
     // hardware info byte
     if (header.chipset != 0 and header.chipset != 1 and header.chipset != 2) {
@@ -189,7 +241,7 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
         .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .HexNumber16Bit => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x:0>4}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RomSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} Mb" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RamSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d} Kb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RomSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RamSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb" ++ AFTER_SPECIFIER, .{ key, value }),
     }
 }
