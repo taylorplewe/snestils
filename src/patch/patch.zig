@@ -2,6 +2,8 @@ const std = @import("std");
 const disp = @import("../disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
+
+const Util = @import("../Util.zig");
 const Patcher = @import("./Patcher.zig");
 const IpsPatcher = @import("./IpsPatcher.zig");
 const UpsPatcher = @import("./UpsPatcher.zig");
@@ -15,6 +17,14 @@ const PatchFormat = enum {
     ips,
     ups,
     bps,
+};
+
+pub const PatchUtil = struct {
+    pub fn init() Util {
+        return .{
+            .vtable = &.{ .do = patch },
+        };
+    }
 };
 
 pub fn patch(allocator: *const std.mem.Allocator, args: [][:0]u8) void {

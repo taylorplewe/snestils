@@ -1,13 +1,27 @@
 const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
+const fatalFmt = disp.fatalFmt;
+
+const Util = @import("Util.zig");
+
+pub const ChecksumUtil = struct {
+    pub fn init() Util {
+        return .{
+            .vtable = &.{ .do = fixChecksum },
+        };
+    }
+};
 
 const possible_header_addrs: []const u24 = &[_]u24{
     0x007fc0,
     0x00ffc0,
     0x40ffc0,
 };
-pub fn fixChecksum(allocator: *const std.mem.Allocator, rom_file: std.fs.File) void {
+pub fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+    const rom_path = args[0];
+    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
     var rom_reader = &rom_reader_core.interface;

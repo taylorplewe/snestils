@@ -6,16 +6,22 @@ const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
 const Util = @import("Util.zig");
-const info = @import("info.zig");
-const checksum = @import("checksum.zig");
-const split = @import("split.zig");
-const patch = @import("patch/patch.zig");
+const InfoUtil = @import("info.zig").InfoUtil;
+const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
+const SplitUtil = @import("split.zig").SplitUtil;
+const PatchUtil = @import("patch/patch.zig").PatchUtil;
 
 const UtilKind = enum {
     info,
     @"fix-checksum",
     split,
     patch,
+};
+const util_init_funcs = [_]*const fn () Util{
+    InfoUtil.init,
+    ChecksumUtil.init,
+    SplitUtil.init,
+    PatchUtil.init,
 };
 
 pub fn main() void {
@@ -27,27 +33,15 @@ pub fn main() void {
     switch (args.len) {
         0...1 => printUsageAndExit(),
         2 => {
-            const rom_path = args[1];
-            const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_only }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
-            info.displayInfo(&arena.allocator(), rom_file);
+            const util = InfoUtil.init();
+            util.do(&arena.allocator(), args[1..]);
         },
         else => {
             const util_name = args[1];
-            const rom_path = args[2];
 
-            const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
-
-            if (std.mem.eql(u8, util_name, "info")) {
-                info.displayInfo(&arena.allocator(), rom_file);
-            } else if (std.mem.eql(u8, util_name, "fix-checksum")) {
-                checksum.fixChecksum(&arena.allocator(), rom_file);
-            } else if (std.mem.eql(u8, util_name, "split")) {
-                split.split(&arena.allocator(), rom_file, rom_path);
-            } else if (std.mem.eql(u8, util_name, "patch")) {
-                patch.patch(&arena.allocator(), args[2..]);
-            } else {
-                fatalFmt("util with the name \x1b[1m{s}\x1b[0m not found", .{util_name});
-            }
+            const util_kind = std.meta.stringToEnum(UtilKind, util_name) orelse fatalFmt("no util found with name \x1b[1m{s}\x1b[0m\n", .{util_name});
+            const util = util_init_funcs[@intFromEnum(util_kind)]();
+            util.do(&arena.allocator(), args[2..]);
         },
     }
 }

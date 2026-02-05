@@ -2,6 +2,8 @@ const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
+
+const Util = @import("Util.zig");
 const checksum = @import("checksum.zig");
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
 
@@ -24,7 +26,6 @@ const SnesRomHeader = extern struct {
 const FormatSpecifier = enum {
     String,
     HexNumber,
-    HexNumber16Bit,
     VersionNumber,
     RomSize,
     RamSize,
@@ -72,13 +73,24 @@ const Region = enum(u8) {
     }
 };
 
+pub const InfoUtil = struct {
+    pub fn init() Util {
+        return .{
+            .vtable = &.{ .do = displayInfo },
+        };
+    }
+};
+
 const possible_header_addrs: []const u24 = &[_]u24{
     0x40ffc0,
     0x00ffc0,
     0x007fc0,
 };
 
-pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) void {
+pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+    const rom_path = args[0];
+    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
     var rom_reader = &rom_reader_core.interface;
@@ -139,6 +151,8 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, rom_file: std.fs.File) v
             displayInfoRow("MD5", .HexNumber, md5);
             displayInfoRow("SHA1", .HexNumber, sha1);
             displayInfoRow("SHA256", .HexNumber, sha256);
+
+            disp.clearAndPrint("\n", .{});
 
             return;
         }
@@ -234,12 +248,11 @@ inline fn getChipsetString(chipset: u8) []u8 {
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
-    const BEFORE_SPECIFIER = "\x1b[33m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m";
+    const BEFORE_SPECIFIER = "\x1b[90m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m";
     const AFTER_SPECIFIER = "\x1b[0m\n";
     switch (T) {
         .String => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .HexNumber16Bit => disp.clearAndPrint(BEFORE_SPECIFIER ++ "0x{x:0>4}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
         .RomSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb" ++ AFTER_SPECIFIER, .{ key, value }),
         .RamSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb" ++ AFTER_SPECIFIER, .{ key, value }),

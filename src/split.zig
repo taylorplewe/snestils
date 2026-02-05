@@ -1,8 +1,22 @@
 const std = @import("std");
 const disp = @import("disp.zig");
 const fatal = disp.fatal;
+const fatalFmt = disp.fatalFmt;
 
-pub fn split(allocator: *const std.mem.Allocator, rom_file: std.fs.File, rom_file_path: []const u8) void {
+const Util = @import("Util.zig");
+
+pub const SplitUtil = struct {
+    pub fn init() Util {
+        return .{
+            .vtable = &.{ .do = split },
+        };
+    }
+};
+
+pub fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+    const rom_path = args[0];
+    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+
     // get size in KiB from user
     var targ_size_input: []u8 = undefined;
     var targ_size: u64 = 0;
@@ -36,9 +50,9 @@ pub fn split(allocator: *const std.mem.Allocator, rom_file: std.fs.File, rom_fil
     var iter: u8 = 0;
 
     // separate rom file extension from main part
-    const last_index_of_period = if (std.mem.lastIndexOfScalar(u8, rom_file_path, '.')) |idx| idx else rom_file_path.len;
-    const rom_file_name_base = rom_file_path[0..last_index_of_period];
-    const rom_file_ext = rom_file_path[last_index_of_period..];
+    const last_index_of_period = if (std.mem.lastIndexOfScalar(u8, rom_path, '.')) |idx| idx else rom_path.len;
+    const rom_file_name_base = rom_path[0..last_index_of_period];
+    const rom_file_ext = rom_path[last_index_of_period..];
 
     while (remaining_size > 0) : (remaining_size -= targ_size) {
         const split_file_path = std.fmt.allocPrint(allocator.*, "{s}_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
