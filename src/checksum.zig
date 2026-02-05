@@ -45,6 +45,21 @@ pub fn calcChecksum(rom: []u8) u16 {
     for (rom) |byte| {
         checksum +%= byte;
     }
+
+    // ROM size must be a power of 2 for checksum calculation; a portion might have to be duplicated
+    if (rom.len & (rom.len - 1) != 0) {
+        // find the largest power of 2 less than or equal to rom.len
+        var power_of_2: usize = 1024 * 1024 * 8; // 8MB; biggest game ever released was 6MB
+        while (power_of_2 > rom.len) power_of_2 >>= 1;
+        const duplicated_section = rom[power_of_2..];
+        const num_times_to_duplicate = (power_of_2 / (rom.len - power_of_2)) - 1;
+        for (0..num_times_to_duplicate) |_| {
+            for (duplicated_section) |byte| {
+                checksum +%= byte;
+            }
+        }
+    }
+
     return checksum;
 }
 
