@@ -1,7 +1,13 @@
 const std = @import("std");
 
+const Usage = @import("Usage.zig");
+const disp = @import("disp.zig");
+const fatalFmt = disp.fatalFmt;
+
 const Util = @This();
 
+usage: ?Usage,
+action_num_args: usize,
 vtable: *const VTable,
 pub const VTable = struct {
     /// Perform main action associated with this utility
@@ -11,5 +17,9 @@ pub const VTable = struct {
 };
 
 pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+    if (self.usage != null and args.len != self.action_num_args) {
+        // fatalFmt("{d} argument(s) required!\n", .{self.action_num_args});
+        self.usage.?.printAndExitWithError();
+    }
     self.vtable.do(allocator, args);
 }

@@ -3,12 +3,23 @@ const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
 pub const SplitUtil = struct {
+    pub const usage: Usage = .{
+        .title = "split",
+        .description = "split a ROM file into multiple smaller files of a certain maximum size",
+        .usage_lines = &.{
+            "<rom-file>",
+        },
+        .sections = &.{},
+    };
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = split },
+            .action_num_args = 1,
+            .usage = usage,
         };
     }
 };

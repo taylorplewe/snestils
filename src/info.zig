@@ -3,6 +3,7 @@ const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 const checksum = @import("checksum.zig");
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
@@ -74,9 +75,19 @@ const Region = enum(u8) {
 };
 
 pub const InfoUtil = struct {
+    pub const usage: Usage = .{
+        .title = "info",
+        .description = "print out information about a ROM",
+        .usage_lines = &.{
+            "<rom>",
+        },
+        .sections = &.{},
+    };
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = displayInfo },
+            .action_num_args = 1,
+            .usage = usage,
         };
     }
 };

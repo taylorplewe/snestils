@@ -3,6 +3,7 @@ const disp = @import("../disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const Usage = @import("../Usage.zig");
 const Util = @import("../Util.zig");
 const Patcher = @import("./Patcher.zig");
 const IpsPatcher = @import("./IpsPatcher.zig");
@@ -20,9 +21,19 @@ const PatchFormat = enum {
 };
 
 pub const PatchUtil = struct {
+    pub const usage: Usage = .{
+        .title = "patch",
+        .description = "apply an IPS, UPS or BPS patch file to a ROM",
+        .usage_lines = &.{
+            "<rom-file> <patch-file>",
+        },
+        .sections = &.{},
+    };
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = patch },
+            .action_num_args = 2,
+            .usage = usage,
         };
     }
 };

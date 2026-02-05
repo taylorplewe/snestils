@@ -5,6 +5,7 @@ const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 const InfoUtil = @import("info.zig").InfoUtil;
 const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
@@ -16,12 +17,14 @@ const UtilKind = enum {
     @"fix-checksum",
     split,
     patch,
+    help,
 };
 const util_init_funcs = [_]*const fn () Util{
     InfoUtil.init,
     ChecksumUtil.init,
     SplitUtil.init,
     PatchUtil.init,
+    HelpUtil.init,
 };
 
 pub fn main() void {
@@ -31,10 +34,13 @@ pub fn main() void {
     const args = std.process.argsAlloc(arena.allocator()) catch fatal("unable to allocate memory for arguments");
 
     switch (args.len) {
-        0...1 => printUsageAndExit(),
+        0...1 => usage.printAndExit(),
         2 => {
-            const util = InfoUtil.init();
-            util.do(&arena.allocator(), args[1..]);
+            const util_name = args[1];
+
+            const util_kind: UtilKind = std.meta.stringToEnum(UtilKind, util_name) orelse .info;
+            const util = util_init_funcs[@intFromEnum(util_kind)]();
+            util.do(&arena.allocator(), if (util_kind == .info) args[1..2] else &.{});
         },
         else => {
             const util_name = args[1];
@@ -46,19 +52,39 @@ pub fn main() void {
     }
 }
 
-fn printUsageAndExit() noreturn {
-    const EXE = if (builtin.os.tag == .windows) ".exe" else "";
-    const TAB = "    ";
-    disp.clearAndPrint("\x1b[1;33msnestils" ++ EXE ++ "\x1b[0m - modify an SNES ROM\n" ++
-        "\n" ++
-        "Usage:\n" ++
-        TAB ++ "\x1b[0msnestils" ++ EXE ++ " <util> <path-to-rom> [path-to-patch-file]\n" ++
-        "\n" ++
-        "Utils:\n" ++
-        TAB ++ "\x1b[33minfo\x1b[0m - print out information about a ROM\n" ++
-        TAB ++ "\x1b[33mfix-checksum\x1b[0m - calculate the ROM's correct checksum and write it to the ROM's internal header\n" ++
-        TAB ++ "\x1b[33msplit\x1b[0m - repeat a ROM's contents to fill a certain amount of memory\n" ++
-        TAB ++ "\x1b[33mpatch\x1b[0m - apply an IPS patch file to a ROM\n", .{});
-    // TAB ++ "\x1b[33mremove-header\x1b[0m - remove a ROM's header\n", .{});
-    std.process.exit(0);
-}
+const HelpUtil = struct {
+    fn printHelp(_: *const std.mem.Allocator, _: [][:0]u8) void {
+        usage.printAndExit();
+    }
+    pub fn init() Util {
+        return .{
+            .action_num_args = 0,
+            .vtable = &.{
+                .do = printHelp,
+            },
+            .usage = null,
+        };
+    }
+};
+
+const EXE = if (builtin.os.tag == .windows) ".exe" else "";
+const usage = Usage{
+    .title = "snestils" ++ EXE,
+    .description = "suite of SNES ROM utilities",
+    .usage_lines = &.{
+        "<util> [options]",
+        "<rom>",
+    },
+    .sections = &.{
+        .{
+            .title = "Utils",
+            .items = &.{
+                .{ .title = "info", .description = "print out information about a ROM" },
+                .{ .title = "fix-checksum", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
+                .{ .title = "split", .description = "repeat a ROM's contents to fill a certain amount of memory" },
+                .{ .title = "patch", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
+                .{ .title = "help", .description = "print this help message and exit" },
+            },
+        },
+    },
+};

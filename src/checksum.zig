@@ -3,12 +3,23 @@ const disp = @import("disp.zig");
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
 pub const ChecksumUtil = struct {
+    pub const usage: Usage = .{
+        .title = "fix-checksum",
+        .description = "write a ROM's correct checksum & complement to its header",
+        .usage_lines = &.{
+            "<rom-file>",
+        },
+        .sections = &.{},
+    };
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = fixChecksum },
+            .action_num_args = 1,
+            .usage = usage,
         };
     }
 };
