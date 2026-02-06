@@ -56,7 +56,12 @@ fn apply(self: *Patcher) void {
                     self.patched_rom.items.len -| record.offset
                 else
                     record.length;
-            self.patched_rom.replaceRange(self.allocator.*, record.offset, replace_len, self.patch_buf[self.patch_idx..(self.patch_idx + record.length)]) catch fatal("could not write bytes to patched ROM file");
+            if (replace_len == 0) {
+                self.patched_rom.appendNTimes(self.allocator.*, 0, record.offset -| self.patched_rom.items.len) catch fatal("could not append 0s to patched ROM file");
+                self.patched_rom.appendSlice(self.allocator.*, self.patch_buf[self.patch_idx..(self.patch_idx + record.length)]) catch fatal("could not append bytes to patched ROM file");
+            } else {
+                self.patched_rom.replaceRange(self.allocator.*, record.offset, replace_len, self.patch_buf[self.patch_idx..(self.patch_idx + record.length)]) catch fatal("could not write bytes to patched ROM file");
+            }
             self.patch_idx += record.length;
         } else {
             const rle_len = std.mem.readVarInt(u16, self.patch_buf[self.patch_idx..(self.patch_idx + 2)], .big);

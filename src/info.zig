@@ -24,12 +24,79 @@ const SnesRomHeader = extern struct {
     checksum: u16,
     interrupt_vectors: [16]u16,
 };
-const FormatSpecifier = enum {
-    String,
-    HexNumber,
-    VersionNumber,
-    RomSize,
-    RamSize,
+/// See https://problemkaputt.de/fullsnes.htm#snescartridgeromheader under "ROM Speed and Map Mode (FFD5h)"
+const MapMode = enum(u8) {
+    LoROM,
+    HiROM,
+    LoROMSDD1,
+    LoROMSA1,
+    ExHiROM = 0x05,
+    HiROMSPC7110 = 0x0a,
+
+    fn getDisplayText(self: *const MapMode) []const u8 {
+        return switch (self.*) {
+            .LoROM => "LoROM",
+            .HiROM => "HiROM",
+            .LoROMSDD1 => "LoROM",
+            .LoROMSA1 => "LoROM",
+            .ExHiROM => "ExHiROM",
+            .HiROMSPC7110 => "HiROM",
+        };
+    }
+};
+/// See https://problemkaputt.de/fullsnes.htm#snescartridgeromheader under "Chipset (ROM/RAM information on cart) (FFD6h) (and some subclassed via FFBFh)"
+const Chipset = enum(u8) {
+    Rom,
+    RomRam,
+    RomRamBattery,
+    RomDsp,
+    RomDspRam,
+    RomDspRamBattery,
+    RomMarioChip1ExpansionRam = 0x13,
+    RomGsuRam = 0x14,
+    RomGsuRamBattery = 0x15,
+    RomGsu1RamBatteryFastMode = 0x1a,
+    RomObc1RamBattery = 0x25,
+    RomSa1RamBatteryF1GrandPrix = 0x32,
+    RomSa1Ram = 0x34,
+    RomSa1RamBattery = 0x35,
+    RomSdd1 = 0x43,
+    RomSdd1RamBattery = 0x45,
+    RomSrtcRamBattery = 0x55,
+    RomSuperGameboy = 0xe3,
+    RomSatellaviewBios = 0xe5,
+    RomCustom = 0xf3,
+    RomCustomRamBattery = 0xf5,
+    RomCustomBattery = 0xf6,
+    RomSpc7110RamBatteryRtc = 0xf9,
+
+    fn getDisplayText(self: *const Chipset) []const u8 {
+        return switch (self.*) {
+            .Rom => "ROM",
+            .RomRam => "ROM + RAM",
+            .RomRamBattery => "ROM + RAM + Battery",
+            .RomDsp => "ROM + DSP + RAM + Battery",
+            .RomDspRam => "ROM + DSP + RAM",
+            .RomDspRamBattery => "ROM + DSP + RAM + Battery",
+            .RomMarioChip1ExpansionRam => "ROM + Mario Chip 1/Expansion RAM",
+            .RomGsuRam => "ROM + GSU (SuperFX) + RAM",
+            .RomGsuRamBattery => "ROM + GSU (SuperFX) + RAM + Battery",
+            .RomGsu1RamBatteryFastMode => "ROM + GSU1 (SuperFX) + RAM + Battery + Fast Mode",
+            .RomObc1RamBattery => "ROM + OBC1 + RAM + Battery",
+            .RomSa1RamBatteryF1GrandPrix => "ROM + SA-1 + RAM + Battery + F1 Grand Prix",
+            .RomSa1Ram => "ROM + SA-1 + RAM",
+            .RomSa1RamBattery => "ROM + SA-1 + RAM + Battery",
+            .RomSdd1 => "ROM + S-DD1",
+            .RomSdd1RamBattery => "ROM + S-DD1 + RAM + Battery",
+            .RomSrtcRamBattery => "ROM + S-RTC + RAM + Battery",
+            .RomSuperGameboy => "ROM + Super Game Boy",
+            .RomSatellaviewBios => "ROM + Satellite View BIOS",
+            .RomCustom => "ROM + Custom",
+            .RomCustomRamBattery => "ROM + Custom + RAM + Battery",
+            .RomCustomBattery => "ROM + Custom + Battery",
+            .RomSpc7110RamBatteryRtc => "ROM + SPC-7110 + RAM + Battery + RTC",
+        };
+    }
 };
 /// Follows naming convention from the official SNES development manual page 1-2-20
 const Region = enum(u8) {
@@ -74,6 +141,14 @@ const Region = enum(u8) {
     }
 };
 
+const FormatSpecifier = enum {
+    String,
+    HexNumber,
+    VersionNumber,
+    RomSize,
+    RamSize,
+};
+
 pub const InfoUtil = struct {
     pub const usage: Usage = .{
         .title = "info",
@@ -93,7 +168,7 @@ pub const InfoUtil = struct {
 };
 
 const possible_header_addrs: []const u24 = &[_]u24{
-    0x40ffc0,
+    0x40ffc0, // this must come first because Tales of Phantasia has a "true" header here and a "false" header (with bad checksums) at another location
     0x00ffc0,
     0x007fc0,
 };
@@ -125,15 +200,17 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
             const internal_rom_size_megabits = (internal_rom_size_kilobytes * 8) / 1024;
             const internal_ram_size_kilobits = internal_ram_size_kilobytes * 8;
             const physical_rom_size_megabits = (((rom.len * 8) / 1024) / 1024);
+            const map_mode: MapMode = @enumFromInt(header.mode & 0x0f);
+            const chipset: Chipset = @enumFromInt(header.chipset);
             displayInfoRow("Title", .String, &header.title);
             displayInfoRow("Version", .VersionNumber, header.version);
             displayInfoRow("Region", .String, header.region.getDisplayName());
             displayInfoRow("ROM size", .RomSize, physical_rom_size_megabits);
             disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb\n", .{internal_rom_size_megabits});
             displayInfoRow("RAM size", .RamSize, internal_ram_size_kilobits);
-            displayInfoRow("Mapping", .String, getMappingString(header.mode));
+            displayInfoRow("Mapping", .String, map_mode.getDisplayText());
             displayInfoRow("Speed", .String, getSpeedString(header.mode));
-            displayInfoRow("Chipset", .String, getChipsetString(header.chipset));
+            displayInfoRow("Chipset", .String, chipset.getDisplayText());
 
             // compare internal checksum to calculated checksum
             const checksum_calculated = checksum.calcChecksum(rom);
@@ -141,11 +218,11 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
             const OK = "\x1b[32;1mOK\x1b[0m";
             const BAD = "\x1b[31;1mBAD\x1b[0m";
             displayInfoRow("Checksum", .String, if (checksum_calculated == header.checksum) OK else BAD);
-            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[1m0x{x:0>4}\x1b[0m\n", .{checksum_calculated});
-            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[1m0x{x:0>4}\x1b[0m\n", .{header.checksum});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_calculated});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{header.checksum});
             displayInfoRow("Checksum complement", .String, if (checksum_compl_calculated == header.checksum_complement) OK else BAD);
-            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[1m0x{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
-            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[1m0x{x:0>4}\x1b[0m\n", .{header.checksum_complement});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
+            disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{header.checksum_complement});
 
             disp.clearAndPrint("\n\n{s:>" ++ KEY_WIDTH_FMT ++ "}\n\n", .{"Hashes"});
             disp.printLoading("calculating hashes");
@@ -172,54 +249,28 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     fatal("SNES ROM header was not found at any of the expected addresses");
 }
 
-fn checkForHeader(header: *SnesRomHeader) bool {
+fn checkForHeader(possible_header: *SnesRomHeader) bool {
     // ascii name of ROM
-    // std.debug.print("title: {s}\n", .{header.title});
-    // std.debug.print("hex title: {x}\n", .{header.title});
-    for (header.title) |byte| {
-        if (!std.ascii.isAlphanumeric(byte) and !std.ascii.isWhitespace(byte) and byte != 0)
+    for (possible_header.title) |byte| {
+        if (!std.ascii.isPrint(byte) and byte != 0)
             return false;
     }
-    // std.debug.print("here\n", .{});
 
-    // mapper mode byte
-    if (header.mode & 0b11100000 != 0b00100000) return false;
-    // std.debug.print("here 2\n", .{});
-    const map_mode = header.mode & 0x0f;
-    // std.debug.print("map mode: {d}\n", .{map_mode});
-    // std.debug.print("header.mode: {x}\n", .{header.mode});
-    if (map_mode != 0 and map_mode != 1 and map_mode != 5) return false;
-
-    // std.debug.print("here 3\n", .{});
-
-    // hardware info byte
-    if (header.chipset != 0 and header.chipset != 1 and header.chipset != 2) {
-        if ((header.chipset & 0x0f) > 6) return false;
-        if ((header.chipset >> 4) > 0x5 and (header.chipset >> 4) < 0xe) return false;
-    }
+    if (possible_header.mode & 0b11100000 != 0b00100000) return false;
+    _ = std.enums.fromInt(MapMode, possible_header.mode & 0x0f) orelse return false;
+    _ = std.enums.fromInt(Chipset, possible_header.chipset) orelse return false;
 
     // existing checksum & complement
-    if (header.checksum ^ header.checksum_complement != 0xffff) return false;
+    if (possible_header.checksum ^ possible_header.checksum_complement != 0xffff) return false;
 
     return true;
 }
 
-inline fn getMappingString(mode: u8) []const u8 {
-    return if (mode & 0x0f == 0)
-        "LoROM"
-    else if (mode & 0x0f == 1)
-        "HiROM"
-    else if (mode & 0x0f == 5)
-        "ExHiROM"
-    else
-        "Unknown";
-}
-
 inline fn getSpeedString(mode: u8) []const u8 {
     return if (mode & 0b0001_0000 != 0)
-        "FastROM"
+        "FastROM\x1b[0m (120ns)"
     else
-        "SlowROM";
+        "SlowROM\x1b[0m (200ns)";
 }
 
 inline fn getChipsetString(chipset: u8) []u8 {
