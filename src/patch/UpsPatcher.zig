@@ -1,7 +1,8 @@
 // the UPS patch file format documentation I used can be found here: http://justsolve.archiveteam.org/wiki/UPS_(binary_patch_format)
 
 const std = @import("std");
-const disp = @import("../disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 const Patcher = @import("./Patcher.zig");
@@ -42,7 +43,7 @@ fn validate(self: *Patcher) void {
         if (checksum_expected != checksum_actual) {
             fatalFmt("original ROM checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
         } else {
-            disp.clearAndPrint("\x1b[32moriginal ROM checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
+            disp.printf("\x1b[32moriginal ROM checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
         }
     }
 
@@ -53,7 +54,7 @@ fn validate(self: *Patcher) void {
         if (checksum_expected != checksum_actual) {
             fatalFmt("patch file checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
         } else {
-            disp.clearAndPrint("\x1b[32mpatch file checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
+            disp.printf("\x1b[32mpatch file checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
         }
     }
 
@@ -64,7 +65,7 @@ fn validate(self: *Patcher) void {
     if (expected_size_original_rom != original_rom_file_size) {
         fatalFmt("original ROM file size does not match expected size.\n  expected size: {d}\n  actual size: {d}\n", .{ expected_size_original_rom, original_rom_file_size });
     } else {
-        disp.clearAndPrint("\x1b[32moriginal ROM file size matches expected size (\x1b[0;1m{d}\x1b[0;32m)\x1b[0m\n", .{expected_size_original_rom});
+        disp.printf("\x1b[32moriginal ROM file size matches expected size (\x1b[0;1m{d}\x1b[0;32m)\x1b[0m\n", .{expected_size_original_rom});
     }
 }
 
@@ -116,7 +117,7 @@ fn apply(self: *Patcher) void {
     if (self.patched_rom.items.len != expected_size_patched_rom) {
         fatalFmt("final patched ROM file size does not match expected size.\n  expected size: {d}\n  actual size: {d}\n", .{ expected_size_patched_rom, self.patched_rom.items.len });
     } else {
-        disp.clearAndPrint("\x1b[32mfinal patched ROM file size matches expected size (\x1b[0;1m{d}\x1b[0;32m)\x1b[0m\n", .{expected_size_patched_rom});
+        disp.printf("\x1b[32mfinal patched ROM file size matches expected size (\x1b[0;1m{d}\x1b[0;32m)\x1b[0m\n", .{expected_size_patched_rom});
     }
 
     // validate patched ROM checksum
@@ -125,6 +126,6 @@ fn apply(self: *Patcher) void {
     if (checksum_expected != checksum_actual) {
         fatalFmt("patched ROM checksum does not match calculated checksum\n  expected: 0x{x:0>8}\n  actual: 0x{x:0>8}\n", .{ checksum_expected, checksum_actual });
     } else {
-        disp.clearAndPrint("\x1b[32mpatched ROM checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
+        disp.printf("\x1b[32mpatched ROM checksum matches calculated checksum (\x1b[0;1m0x{x:0>8}\x1b[0;32m)\x1b[0m\n", .{checksum_actual});
     }
 }

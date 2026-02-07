@@ -201,7 +201,7 @@ pub inline fn hasCopierHeader(self: *SnesRom) bool {
     return (self.bin.len & 0x3ff) == 512;
 }
 
-pub fn calcChecksum(self: *SnesRom) u16 {
+pub fn getCalculatedChecksum(self: *SnesRom) u16 {
     var checksum: u16 = 0;
     for (self.bin) |byte| {
         checksum +%= byte;

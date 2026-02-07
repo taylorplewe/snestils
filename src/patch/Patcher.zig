@@ -1,7 +1,8 @@
 //! An interface which any patch format must implement
 
 const std = @import("std");
-const disp = @import("../disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const Patcher = @This();
 

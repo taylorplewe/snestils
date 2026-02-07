@@ -1,7 +1,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
-
-const disp = @import("disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 

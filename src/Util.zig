@@ -1,8 +1,9 @@
 const std = @import("std");
+const shared = @import("shared");
+const disp = shared.disp;
+const fatalFmt = disp.fatalFmt;
 
 const Usage = @import("Usage.zig");
-const disp = @import("disp.zig");
-const fatalFmt = disp.fatalFmt;
 
 const Util = @This();
 

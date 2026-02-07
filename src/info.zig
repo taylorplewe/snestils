@@ -1,9 +1,10 @@
 const std = @import("std");
-const disp = @import("disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
-const SnesRom = @import("shared").SnesRom;
+const SnesRom = shared.SnesRom;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 // const developer_ids: [_][]const u8 = @import("developer_ids.zon");
@@ -50,7 +51,7 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     const rom_bin = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");
     var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary");
 
-    disp.clearAndPrint("\n", .{});
+    disp.println("");
 
     const internal_rom_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(rom.header.size_rom));
     const internal_ram_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(rom.header.size_ram));
@@ -62,27 +63,27 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     displayInfoRow("Version", .VersionNumber, rom.header.version);
     displayInfoRow("Region", .String, rom.header.region.getDisplayName());
     displayInfoRow("ROM size", .RomSize, physical_rom_size_megabits);
-    disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb\n", .{internal_rom_size_megabits});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb\n", .{internal_rom_size_megabits});
     displayInfoRow("RAM size", .RamSize, internal_ram_size_kilobits);
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
     displayInfoRow("Chipset", .String, rom.header.chipset.getDisplayText());
 
     // compare internal checksum to calculated checksum
-    const checksum_calculated = rom.calcChecksum();
+    const checksum_calculated = rom.getCalculatedChecksum();
     const checksum_compl_calculated = checksum_calculated ^ 0xffff;
     const OK = "\x1b[32;1mOK\x1b[0m";
     const BAD = "\x1b[31;1mBAD\x1b[0m";
     displayInfoRow("Checksum", .String, if (checksum_calculated == rom.header.checksum) OK else BAD);
-    disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_calculated});
-    disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_calculated});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum});
     displayInfoRow("Checksum complement", .String, if (checksum_compl_calculated == rom.header.checksum_complement) OK else BAD);
-    disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
-    disp.clearAndPrint((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
 
     displayInfoRow("Has copier header", .String, if (rom.hasCopierHeader()) "Yes" else "No");
 
-    disp.clearAndPrint("\n\n{s:>" ++ KEY_WIDTH_FMT ++ "}\n\n", .{"Hashes"});
+    disp.printf("\n\n", .{});
     disp.printLoading("calculating hashes");
 
     // get various hashes of ROM data
@@ -93,12 +94,14 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     std.crypto.hash.Md5.hash(rom_bin, &md5, .{});
     std.crypto.hash.Sha1.hash(rom_bin, &sha1, .{});
     std.crypto.hash.sha2.Sha256.hash(rom_bin, &sha256, .{});
+    disp.clearLine();
+    disp.printf("{s:>" ++ KEY_WIDTH_FMT ++ "}\n\n", .{"Hashes"});
     displayInfoRow("CRC32", .HexNumber, crc32);
     displayInfoRow("MD5", .HexNumber, md5);
     displayInfoRow("SHA1", .HexNumber, sha1);
     displayInfoRow("SHA256", .HexNumber, sha256);
 
-    disp.clearAndPrint("\n", .{});
+    disp.println("");
 
     // fatal("SNES ROM header was not found at any of the expected addresses");
 }
@@ -107,10 +110,10 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
     const BEFORE_SPECIFIER = "\x1b[90m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m";
     const AFTER_SPECIFIER = "\x1b[0m\n";
     switch (T) {
-        .String => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .HexNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .VersionNumber => disp.clearAndPrint(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RomSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RamSize => disp.clearAndPrint(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .String => disp.printf(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .HexNumber => disp.printf(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .VersionNumber => disp.printf(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb" ++ AFTER_SPECIFIER, .{ key, value }),
     }
 }

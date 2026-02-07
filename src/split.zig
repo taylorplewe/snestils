@@ -1,5 +1,6 @@
 const std = @import("std");
-const disp = @import("disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
@@ -36,14 +37,14 @@ pub fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
         var stdin_core = std.fs.File.stdin().reader(&reader_buf);
         var stdin = &stdin_core.interface;
 
-        disp.clearAndPrint("What size KiB chunks (512, 1024, or 2048)? ", .{});
+        disp.println("What size KiB chunks (512, 1024, or 2048)? ");
         targ_size_input = stdin.takeDelimiter('\n') catch fatal("could not read input from user") orelse &.{};
         targ_size = std.fmt.parseInt(u64, std.mem.trimRight(u8, targ_size_input, "\n\r"), 10) catch {
-            disp.clearAndPrint("please provide a numeric value!\n", .{});
+            disp.println("please provide a numeric value!");
             continue;
         };
         if (targ_size == 512 or targ_size == 1024 or targ_size == 2048) break;
-        disp.clearAndPrint("please provide a valid KiB size!\n", .{});
+        disp.println("please provide a valid KiB size!");
     }
     targ_size *= 1024; // KiB
 
@@ -51,7 +52,7 @@ pub fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     rom_file.seekFromEnd(0) catch unreachable;
     var remaining_size = rom_file.getPos() catch fatal("could not get size of file");
     if (remaining_size < targ_size) {
-        disp.clearAndPrint("ROM file is already smaller or equal to {d} bytes!", .{targ_size});
+        disp.printf("ROM file is already smaller or equal to {d} bytes!", .{targ_size});
         std.process.exit(0);
     }
 
@@ -74,5 +75,5 @@ pub fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
         _ = split_file.write(buf) catch fatal("could not write split buffer into split file");
         iter += 1;
     }
-    disp.clearAndPrint("\x1b[32msplit ROM files written to same directory as given ROM file.\x1b[0m", .{});
+    disp.println("\x1b[32msplit ROM files written to same directory as given ROM file.\x1b[0m");
 }

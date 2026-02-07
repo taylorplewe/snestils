@@ -1,5 +1,6 @@
 const std = @import("std");
-const disp = @import("../disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
@@ -77,8 +78,11 @@ pub fn patch(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
 
     disp.printLoading("validating ROM and patch file");
     patcher.validate();
+    disp.clearLine();
+
     disp.printLoading("patching ROM");
     patcher.apply();
+    disp.clearLine();
 
     // write patched ROM buffer to file
     const patched_rom_path = std.fmt.allocPrint(allocator.*, "{s}.patched.{s}", .{ original_rom_path_base, original_rom_path_ext }) catch fatal("could not allocate memory for patched ROM path");
@@ -89,5 +93,5 @@ pub fn patch(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     var patched_rom_writer = &patched_rom_file_writer.interface;
     patched_rom_writer.writeAll(patcher.patched_rom.items) catch fatal("could not write patched ROM buffer to file");
 
-    disp.clearAndPrint("\n\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{patched_rom_path});
+    disp.printf("\n\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{patched_rom_path});
 }

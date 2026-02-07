@@ -1,9 +1,10 @@
 const std = @import("std");
-const disp = @import("disp.zig");
+const shared = @import("shared");
+const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
-const SnesRom = @import("shared").SnesRom;
+const SnesRom = shared.SnesRom;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
@@ -39,8 +40,9 @@ pub fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
 
     // calculate checksum
     disp.printLoading("calculating checksum");
-    const checksum = rom.calcChecksum();
-    disp.clearAndPrint("checksum: \x1b[33m0x{x}\x1b[0m\n", .{checksum});
+    const checksum = rom.getCalculatedChecksum();
+    disp.clearLine();
+    disp.printf("checksum: \x1b[33m0x{x}\x1b[0m\n", .{checksum});
 
     // write checksum to ROM header
     disp.printLoading("writing checksum to ROM header");
@@ -53,5 +55,6 @@ pub fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     rom_writer.writeInt(u16, checksum, .little) catch fatal("could not write checksum to ROM file");
     rom_writer.flush() catch fatal("could not flush ROM writer");
 
-    disp.clearAndPrint("\x1b[32mchecksum written to ROM header.\x1b[0m\n", .{});
+    disp.clearLine();
+    disp.println("\x1b[32mchecksum written to ROM header.\x1b[0m");
 }
