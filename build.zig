@@ -4,10 +4,20 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseFast });
 
+    const shared_mod = b.createModule(.{
+        .root_source_file = b.path("src/shared/root.zig"),
+    });
+
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .imports = &.{
+            .{
+                .name = "shared",
+                .module = shared_mod,
+            },
+        },
     });
 
     const exe = b.addExecutable(.{
