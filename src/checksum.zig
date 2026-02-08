@@ -51,7 +51,7 @@ pub fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     var rom_writer = &rom_file_writer.interface;
 
     rom_file_writer.seekTo(rom.header_addr + 0x1c) catch fatal("could not seek file for writing calculated checksum");
-    rom_writer.writeInt(u16, checksum ^ 0xffff, .little) catch fatal("could not write checksum complement to ROM file");
+    rom_writer.writeInt(u16, ~checksum, .little) catch fatal("could not write checksum complement to ROM file");
     rom_writer.writeInt(u16, checksum, .little) catch fatal("could not write checksum to ROM file");
     rom_writer.flush() catch fatal("could not flush ROM writer");
 

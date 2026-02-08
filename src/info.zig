@@ -53,25 +53,20 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
 
     disp.println("");
 
-    const internal_rom_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(rom.header.size_rom));
-    const internal_ram_size_kilobytes = @as(u32, 1) << @as(u5, @intCast(rom.header.size_ram));
-    const internal_rom_size_megabits = (internal_rom_size_kilobytes * 8) / 1024;
-    const internal_ram_size_kilobits = internal_ram_size_kilobytes * 8;
-    const physical_rom_size_megabits = (((rom_bin.len * 8) / 1024) / 1024);
-    const map_mode: SnesRom.MapMode = @enumFromInt(rom.header.mode & 0x0f);
+    const map_mode: SnesRom.SnesRomHeader.MapMode = @enumFromInt(rom.header.mode & 0x0f);
     displayInfoRow("Title", .String, &rom.header.title);
     displayInfoRow("Version", .VersionNumber, rom.header.version);
     displayInfoRow("Region", .String, rom.header.region.getDisplayName());
-    displayInfoRow("ROM size", .RomSize, physical_rom_size_megabits);
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb\n", .{internal_rom_size_megabits});
-    displayInfoRow("RAM size", .RamSize, internal_ram_size_kilobits);
+    displayInfoRow("ROM size", .RomSize, rom.getPhysicalRomSizeMegabits());
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
+    displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
     displayInfoRow("Chipset", .String, rom.header.chipset.getDisplayText());
 
     // compare internal checksum to calculated checksum
     const checksum_calculated = rom.getCalculatedChecksum();
-    const checksum_compl_calculated = checksum_calculated ^ 0xffff;
+    const checksum_compl_calculated = ~checksum_calculated;
     const OK = "\x1b[32;1mOK\x1b[0m";
     const BAD = "\x1b[31;1mBAD\x1b[0m";
     displayInfoRow("Checksum", .String, if (checksum_calculated == rom.header.checksum) OK else BAD);
@@ -80,10 +75,10 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     displayInfoRow("Checksum complement", .String, if (checksum_compl_calculated == rom.header.checksum_complement) OK else BAD);
     disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
     disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
-
     displayInfoRow("Has copier header", .String, if (rom.hasCopierHeader()) "Yes" else "No");
 
     disp.printf("\n\n", .{});
+
     disp.printLoading("calculating hashes");
 
     // get various hashes of ROM data
@@ -113,7 +108,7 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
         .String => disp.printf(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
         .HexNumber => disp.printf(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.printf(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb" ++ AFTER_SPECIFIER, .{ key, value }),
+        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
+        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
     }
 }
