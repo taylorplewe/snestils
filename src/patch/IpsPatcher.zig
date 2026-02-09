@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 // the IPS patch file format documentation I used can be found here: https://zerosoft.zophar.net/ips.php
 
 const std = @import("std");

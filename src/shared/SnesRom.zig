@@ -1,4 +1,9 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 const std = @import("std");
+
+const developer_ids: []const []const u8 = @import("developer_ids.zon");
 
 const SnesRom = @This();
 
@@ -208,9 +213,20 @@ pub const SnesRomExtendedHeader = extern struct {
     chipset_subtype: u8,
 
     /// `bin` should start at the expected location of the extended header. The presence of an extended header (developer id == 0x33) should already be assumed due to parsing the regular header prior to this.
+    ///
+    /// Verifies that both `maker_code` and `game_code` are ASCII
     fn fromBin(bin: []const u8) ParseError!SnesRomExtendedHeader {
         var reader = std.Io.Reader.fixed(bin);
-        return reader.takeStruct(SnesRomExtendedHeader, .little) catch return ParseError.InvalidHeader;
+        const header = reader.takeStruct(SnesRomExtendedHeader, .little) catch return ParseError.InvalidHeader;
+        for (header.maker_code) |byte| {
+            if (!std.ascii.isPrint(byte))
+                return ParseError.InvalidHeader;
+        }
+        for (header.game_code) |byte| {
+            if (!std.ascii.isPrint(byte))
+                return ParseError.InvalidHeader;
+        }
+        return header;
     }
 };
 
@@ -227,6 +243,25 @@ pub fn fromBin(bin: []const u8) ParseError!SnesRom {
             .extended_header = extended_header,
         };
     };
+}
+
+pub inline fn getDeveloperName(self: *SnesRom) ?[]const u8 {
+    var table_index: usize = 0;
+    if (self.extended_header == null) {
+        table_index = ((self.header.developer_id >> 4) * 36) + (self.header.developer_id & 0x0f);
+    } else {
+        for (self.extended_header.?.maker_code, 0..) |byte, i| {
+            // `maker_code` has already been verified to be printable ASCII in `SnesRomExtendedHeader.fromBin`
+            const val = if (std.ascii.isDigit(byte)) byte - '0' else (byte - 'A') + 10;
+            table_index += std.math.pow(usize, 36, (1 - i)) * val;
+        }
+    }
+
+    if (table_index == 0 or table_index >= developer_ids.len) {
+        return null;
+    }
+
+    return developer_ids[table_index];
 }
 
 pub inline fn hasCopierHeader(self: *SnesRom) bool {

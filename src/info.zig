@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 const std = @import("std");
 const shared = @import("shared");
 const disp = shared.disp;
@@ -55,6 +58,7 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
 
     const map_mode: SnesRom.SnesRomHeader.MapMode = @enumFromInt(rom.header.mode & 0x0f);
     displayInfoRow("Title", .String, &rom.header.title);
+    displayInfoRow("Developer", .String, rom.getDeveloperName() orelse "Unkown (demo or beta ROM?)");
     displayInfoRow("Version", .VersionNumber, rom.header.version);
     displayInfoRow("Region", .String, rom.header.region.getDisplayName());
     if (rom.extended_header != null) {

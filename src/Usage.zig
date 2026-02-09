@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 const std = @import("std");
 const shared = @import("shared");
 const disp = shared.disp;

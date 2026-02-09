@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 const std = @import("std");
 
 pub fn printf(comptime fmt: []const u8, args: anytype) void {

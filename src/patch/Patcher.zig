@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Taylor Plewe
+// See `main.zig` for full copyright notice
+
 //! An interface which any patch format must implement
 
 const std = @import("std");
