@@ -149,7 +149,7 @@ pub const SnesRomHeader = extern struct {
                 .RomSatellaviewBios => "ROM + Satellite View BIOS",
                 .RomCustom => std.fmt.bufPrint(&buf, "ROM + {s}", .{custom_chip_name}) catch unreachable,
                 .RomCustomRamBattery => std.fmt.bufPrint(&buf, "ROM + {s} + RAM + Battery", .{custom_chip_name}) catch unreachable,
-                .RomCustomBattery => "ROM + Seta DSP",
+                .RomCustomBattery => "ROM + Seta DSP (ST010/ST011)",
                 .RomSpc7110RamBatteryRtc => "ROM + SPC-7110 + RAM + Battery + RTC",
             };
         }
