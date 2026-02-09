@@ -65,7 +65,7 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
-    displayInfoRow("Chipset", .String, rom.header.chipset.getDisplayText());
+    displayInfoRow("Chipset", .String, rom.header.chipset.getDisplayText(if (rom.extended_header != null) rom.extended_header.?.chipset_subtype else 0));
 
     // compare internal checksum to calculated checksum
     const checksum_calculated = rom.getCalculatedChecksum();

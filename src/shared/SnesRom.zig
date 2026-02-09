@@ -118,7 +118,15 @@ pub const SnesRomHeader = extern struct {
         RomCustomBattery = 0xf6,
         RomSpc7110RamBatteryRtc = 0xf9,
 
-        pub fn getDisplayText(self: *const Chipset) []const u8 {
+        pub inline fn getDisplayText(self: *const Chipset, subtype: u8) []const u8 {
+            var buf: [32]u8 = undefined;
+            const custom_chip_name = switch (subtype) {
+                0x00 => "SPC7110",
+                0x01 => "ST010/ST011",
+                0x02 => "ST018",
+                0x10 => "CX4",
+                else => "Custom",
+            };
             return switch (self.*) {
                 .Rom => "ROM",
                 .RomRam => "ROM + RAM",
@@ -139,9 +147,9 @@ pub const SnesRomHeader = extern struct {
                 .RomSrtcRamBattery => "ROM + S-RTC + RAM + Battery",
                 .RomSuperGameboy => "ROM + Super Game Boy",
                 .RomSatellaviewBios => "ROM + Satellite View BIOS",
-                .RomCustom => "ROM + Custom",
-                .RomCustomRamBattery => "ROM + Custom + RAM + Battery",
-                .RomCustomBattery => "ROM + Custom + Battery",
+                .RomCustom => std.fmt.bufPrint(&buf, "ROM + {s}", .{custom_chip_name}) catch unreachable,
+                .RomCustomRamBattery => std.fmt.bufPrint(&buf, "ROM + {s} + RAM + Battery", .{custom_chip_name}) catch unreachable,
+                .RomCustomBattery => "ROM + Seta DSP",
                 .RomSpc7110RamBatteryRtc => "ROM + SPC-7110 + RAM + Battery + RTC",
             };
         }
