@@ -57,6 +57,9 @@ pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     displayInfoRow("Title", .String, &rom.header.title);
     displayInfoRow("Version", .VersionNumber, rom.header.version);
     displayInfoRow("Region", .String, rom.header.region.getDisplayName());
+    if (rom.extended_header != null) {
+        displayInfoRow("Game code", .String, rom.extended_header.?.game_code);
+    }
     displayInfoRow("ROM size", .RomSize, rom.getPhysicalRomSizeMegabits());
     disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
     displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());

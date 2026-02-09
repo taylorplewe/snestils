@@ -3,8 +3,13 @@ const std = @import("std");
 const SnesRom = @This();
 
 bin: []const u8,
-header: SnesRomHeader,
 header_addr: u24,
+header: SnesRomHeader,
+extended_header: ?SnesRomExtendedHeader,
+
+const ParseError = error{
+    InvalidHeader,
+};
 
 pub const SnesRomHeader = extern struct {
     title: [21]u8,
@@ -18,10 +23,6 @@ pub const SnesRomHeader = extern struct {
     checksum_complement: u16,
     checksum: u16,
     interrupt_vectors: [16]u16,
-
-    const ParseError = error{
-        InvalidHeader,
-    };
 
     const possible_header_addrs: []const u24 = &[_]u24{
         0x40ffc0, // this must come first because Tales of Phantasia has a "true" header here and a "false" header (with bad checksums) at another location
@@ -189,22 +190,39 @@ pub const SnesRomHeader = extern struct {
     };
 };
 
-pub fn fromBin(bin: []const u8) SnesRomHeader.ParseError!SnesRom {
+pub const SnesRomExtendedHeader = extern struct {
+    maker_code: [2]u8,
+    game_code: [4]u8,
+    reserved: [6]u8,
+    expansion_flash_size: u8,
+    expansion_ram_size: u8,
+    special_version: u8,
+    chipset_subtype: u8,
+
+    /// `bin` should start at the expected location of the extended header. The presence of an extended header (developer id == 0x33) should already be assumed due to parsing the regular header prior to this.
+    fn fromBin(bin: []const u8) ParseError!SnesRomExtendedHeader {
+        var reader = std.Io.Reader.fixed(bin);
+        return reader.takeStruct(SnesRomExtendedHeader, .little) catch return ParseError.InvalidHeader;
+    }
+};
+
+pub fn fromBin(bin: []const u8) ParseError!SnesRom {
     return blk: {
         const header, const header_addr = try SnesRomHeader.fromBin(bin);
+        const has_extended_header = header.developer_id == 0x33;
+        const expected_extended_header = bin[(header_addr - 0x10)..];
+        const extended_header = if (has_extended_header) try SnesRomExtendedHeader.fromBin(expected_extended_header) else null;
         break :blk .{
             .bin = bin,
-            .header = header,
             .header_addr = header_addr,
+            .header = header,
+            .extended_header = extended_header,
         };
     };
 }
 
 pub inline fn hasCopierHeader(self: *SnesRom) bool {
     return (self.bin.len & 0x3ff) == 512;
-}
-pub inline fn hasExpandedHeader(self: *SnesRom) bool {
-    return self.header.developer_id == 0x33;
 }
 
 pub fn getCalculatedChecksum(self: *SnesRom) u16 {
