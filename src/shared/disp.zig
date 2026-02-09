@@ -1,5 +1,5 @@
 // Copyright (c) 2026 Taylor Plewe
-// See `main.zig` for full copyright notice
+// See `main.zig` for full usage and warranty notice
 
 const std = @import("std");
 

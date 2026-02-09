@@ -25,5 +25,5 @@ A rather ambitious goal for this program is to attain feature parity with ucon64
   - [ROM header](https://snes.nesdev.org/wiki/ROM_header)
   - [ROM file formats](https://snes.nesdev.org/wiki/ROM_file_formats)
 - [mousebitelabs.com](mousebitelabs.com)
-- ucon64; I have no idea where the official repo is but do a GitHub search and you'll see plenty of mirrors
+- [ucon64](https://ucon64.sourceforge.io/)
 - [termshot](https://github.com/homeport/termshot) for the terminal screenshot
