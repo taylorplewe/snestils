@@ -5,6 +5,8 @@ A CLI that encompasses a suite of utilities for working with Super Nintendo/Supe
 
 A rather ambitious goal for this program is to attain feature parity with ucon64, just the SNES-specific features. And keep in mind, ucon64 only supports IPS, APS and PPF patch formats, and not BPS or UPS.
 
+For the time being, this project is licensed under the GNU General Public License v2.0 because I've borrowed some code (specifically, [`developer_ids.zon`](src/shared/developer_ids.zon)) from ucon64, which is under the same [license](https://ucon64.sourceforge.io/ucon64/license.html); it is a copyleft license and I am unsure just how much "copying" you can do from one codebase to another before the latter becomes "derivative" of the former.
+
 ## Utilities
 | Name | Description |
 | - | - |
