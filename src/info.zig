@@ -34,10 +34,7 @@ pub const InfoUtil = struct {
     };
     pub fn init() Util {
         return .{
-            .vtable = &.{
-                .do = displayInfo,
-            },
-            .action_num_args = 1,
+            .vtable = &.{ .do = displayInfo },
             .usage = usage,
         };
     }

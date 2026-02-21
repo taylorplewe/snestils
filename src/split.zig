@@ -22,7 +22,6 @@ pub const SplitUtil = struct {
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = split },
-            .action_num_args = 1,
             .usage = usage,
         };
     }

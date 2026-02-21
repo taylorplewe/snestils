@@ -231,17 +231,15 @@ pub const SnesRomExtendedHeader = extern struct {
 };
 
 pub fn fromBin(bin: []const u8) ParseError!SnesRom {
-    return blk: {
-        const header, const header_addr = try SnesRomHeader.fromBin(bin);
-        const has_extended_header = header.developer_id == 0x33;
-        const expected_extended_header = bin[(header_addr - 0x10)..];
-        const extended_header = if (has_extended_header) try SnesRomExtendedHeader.fromBin(expected_extended_header) else null;
-        break :blk .{
-            .bin = bin,
-            .header_addr = header_addr,
-            .header = header,
-            .extended_header = extended_header,
-        };
+    const header, const header_addr = try SnesRomHeader.fromBin(bin);
+    const has_extended_header = header.developer_id == 0x33;
+    const expected_extended_header = bin[(header_addr - 0x10)..];
+    const extended_header = if (has_extended_header) try SnesRomExtendedHeader.fromBin(expected_extended_header) else null;
+    return .{
+        .bin = bin,
+        .header_addr = header_addr,
+        .header = header,
+        .extended_header = extended_header,
     };
 }
 

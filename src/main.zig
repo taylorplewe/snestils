@@ -74,10 +74,7 @@ const HelpUtil = struct {
     }
     pub fn init() Util {
         return .{
-            .action_num_args = 0,
-            .vtable = &.{
-                .do = printHelp,
-            },
+            .vtable = &.{ .do = printHelp },
             .usage = null,
         };
     }

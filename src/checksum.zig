@@ -23,7 +23,6 @@ pub const ChecksumUtil = struct {
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = fixChecksum },
-            .action_num_args = 1,
             .usage = usage,
         };
     }

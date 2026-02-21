@@ -36,7 +36,6 @@ pub const PatchUtil = struct {
     pub fn init() Util {
         return .{
             .vtable = &.{ .do = patch },
-            .action_num_args = 2,
             .usage = usage,
         };
     }
