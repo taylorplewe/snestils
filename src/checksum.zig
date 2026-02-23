@@ -16,21 +16,88 @@ pub const ChecksumUtil = struct {
         .title = "fix-checksum",
         .description = "write a ROM's correct checksum & complement to its header",
         .usage_lines = &.{
-            "<rom-file>",
+            "<rom-file> [options]",
+            "<rom-file> [-o|--out] <output-file> [options]",
         },
-        .sections = &.{},
+        .sections = &.{
+            .{
+                .title = "Options",
+                .items = &.{
+                    .{ .title = "--overwrite", .description = "overwrite the original ROM file when fixing the checksum" },
+                },
+            },
+        },
     };
     pub fn init() Util {
         return .{
-            .vtable = &.{ .do = fixChecksum },
+            .vtable = &.{
+                .parseArgs = parseArgs,
+                .do = fixChecksum,
+            },
             .usage = usage,
         };
     }
 };
 
-fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
-    const rom_path = args[0];
-    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+const Args = struct {
+    rom_path: []const u8,
+    out_path: []const u8,
+    overwrite: bool,
+};
+const ParseArgsState = enum {
+    Init,
+    OutPath,
+};
+var args: Args = .{
+    .rom_path = "",
+    .out_path = "",
+    .overwrite = false,
+};
+fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
+    if (args_raw.len < 1) {
+        return Util.ParseArgsError.MissingRequiredArg;
+    }
+    var state: ParseArgsState = .Init;
+    for (args_raw) |arg| {
+        switch (state) {
+            .Init => {
+                if (std.mem.eql(u8, arg, "-o") or std.mem.eql(u8, arg, "--out")) {
+                    state = .OutPath;
+                } else if (std.mem.eql(u8, arg, "--overwrite")) {
+                    args.overwrite = true;
+                } else {
+                    if (args.rom_path.len == 0) {
+                        args.rom_path = arg;
+                    } else {
+                        return Util.ParseArgsError.TooManyArgs;
+                    }
+                }
+            },
+            .OutPath => {
+                args.out_path = arg;
+                state = .Init;
+            },
+        }
+    }
+    if (state == .OutPath) {
+        return Util.ParseArgsError.MissingParameterArg;
+    }
+    if (args.rom_path.len == 0) {
+        return Util.ParseArgsError.MissingRequiredArg;
+    }
+    if (args.overwrite) {
+        args.out_path = args.rom_path;
+    } else if (args.out_path.len == 0) {
+        // default out filepath
+        const original_rom_path_last_index_of_period = std.mem.lastIndexOfScalar(u8, args.rom_path, '.') orelse args.rom_path.len;
+        const original_rom_path_base = args.rom_path[0..original_rom_path_last_index_of_period];
+        const original_rom_path_ext = args.rom_path[(original_rom_path_last_index_of_period + 1)..];
+        args.out_path = std.fmt.allocPrint(allocator.*, "{s}.goodchecksum.{s}", .{ original_rom_path_base, original_rom_path_ext }) catch fatal("could not allocate memory for patched ROM path");
+    }
+}
+
+fn fixChecksum(allocator: *const std.mem.Allocator) void {
+    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
     defer rom_file.close();
 
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
@@ -48,14 +115,22 @@ fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
 
     // write checksum to ROM header
     disp.printLoading("writing checksum to ROM header");
-    var rom_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var rom_file_writer = rom_file.writer(&rom_writer_buf);
-    var rom_writer = &rom_file_writer.interface;
+    const out_file: std.fs.File = blk: {
+        if (!args.overwrite and !std.mem.eql(u8, args.rom_path, args.out_path)) {
+            std.fs.cwd().copyFile(args.rom_path, std.fs.cwd(), args.out_path, .{}) catch fatalFmt("could not copy file {s} to {s}", .{ args.rom_path, args.out_path });
+            break :blk std.fs.cwd().openFile(args.out_path, .{ .mode = .write_only }) catch fatalFmt("could not open out file {s}", .{args.out_path});
+        } else {
+            break :blk rom_file;
+        }
+    };
+    var out_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
+    var out_file_writer = out_file.writer(&out_writer_buf);
+    var out_writer = &out_file_writer.interface;
 
-    rom_file_writer.seekTo(rom.header_addr + 0x1c) catch fatal("could not seek file for writing calculated checksum");
-    rom_writer.writeInt(u16, ~checksum, .little) catch fatal("could not write checksum complement to ROM file");
-    rom_writer.writeInt(u16, checksum, .little) catch fatal("could not write checksum to ROM file");
-    rom_writer.flush() catch fatal("could not flush ROM writer");
+    out_file_writer.seekTo(rom.header_addr + 0x1c) catch fatal("could not seek file for writing calculated checksum");
+    out_writer.writeInt(u16, ~checksum, .little) catch fatal("could not write checksum complement to ROM file");
+    out_writer.writeInt(u16, checksum, .little) catch fatal("could not write checksum to ROM file");
+    out_writer.flush() catch fatal("could not flush ROM writer");
 
     disp.clearLine();
     disp.println("\x1b[32mchecksum written to ROM header.\x1b[0m");

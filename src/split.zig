@@ -21,7 +21,10 @@ pub const SplitUtil = struct {
     };
     pub fn init() Util {
         return .{
-            .vtable = &.{ .do = split },
+            .vtable = &.{
+                .parseArgs = parseArgs,
+                .do = split,
+            },
             .usage = usage,
         };
     }
@@ -29,22 +32,21 @@ pub const SplitUtil = struct {
 
 const Args = struct {
     rom_path: []const u8,
-    // TODO: split sizes, etc
 };
-var args: Args = undefined;
-fn parseArgs(args_raw: [][:0]u8) Util.ParseArgsError!void {
-    if (args_raw.len < 1) {
-        disp.println("ROM path required");
-        return Util.ParseArgsError{};
+var args: Args = .{
+    .rom_path = "",
+};
+fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
+    if (args_raw.len != 1) {
+        return Util.ParseArgsError.MissingRequiredArg;
     }
     args = .{
         .rom_path = args_raw[0],
     };
 }
 
-fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
-    const rom_path = args[0];
-    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+fn split(allocator: *const std.mem.Allocator) void {
+    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
 
     // get size in KiB from user
     var targ_size_input: []u8 = undefined;
@@ -79,14 +81,14 @@ fn split(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     var iter: u8 = 0;
 
     // separate rom file extension from main part
-    const last_index_of_period = if (std.mem.lastIndexOfScalar(u8, rom_path, '.')) |idx| idx else rom_path.len;
-    const rom_file_name_base = rom_path[0..last_index_of_period];
-    const rom_file_ext = rom_path[last_index_of_period..];
+    const last_index_of_period = if (std.mem.lastIndexOfScalar(u8, args.rom_path, '.')) |idx| idx else args.rom_path.len;
+    const rom_file_name_base = args.rom_path[0..last_index_of_period];
+    const rom_file_ext = args.rom_path[last_index_of_period..];
 
     while (remaining_size > 0) : (remaining_size -= targ_size) {
         const split_file_path = std.fmt.allocPrint(allocator.*, "{s}_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
         const split_file = std.fs.cwd().createFile(split_file_path, .{}) catch
-            fatal("could not create split file");
+            fatalFmt("could not create split file {s}", .{split_file_path});
         defer split_file.close();
         _ = rom_file.read(buf) catch fatal("could not read ROM file into split buffer");
         _ = split_file.write(buf) catch fatal("could not write split buffer into split file");

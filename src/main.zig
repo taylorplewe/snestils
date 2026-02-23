@@ -69,12 +69,15 @@ pub fn main() void {
 }
 
 const HelpUtil = struct {
-    fn printHelp(_: *const std.mem.Allocator, _: [][:0]u8) void {
+    fn printHelp(_: *const std.mem.Allocator) void {
         usage.printAndExit();
     }
     pub fn init() Util {
         return .{
-            .vtable = &.{ .do = printHelp },
+            .vtable = &.{
+                .parseArgs = null,
+                .do = printHelp,
+            },
             .usage = null,
         };
     }

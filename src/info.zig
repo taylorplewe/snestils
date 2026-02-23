@@ -10,7 +10,6 @@ const fatalFmt = disp.fatalFmt;
 const SnesRom = shared.SnesRom;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
-// const developer_ids: [_][]const u8 = @import("developer_ids.zon");
 
 const KEY_WIDTH = 20;
 const KEY_WIDTH_FMT = std.fmt.comptimePrint("{d}", .{KEY_WIDTH});
@@ -46,11 +45,14 @@ pub const InfoUtil = struct {
 const Args = struct {
     rom_path: []const u8,
 };
-var args: Args = undefined;
-fn parseArgs(args_raw: [][:0]u8) Util.ParseArgsError!void {
-    if (args_raw.len != 1) {
-        disp.println("ROM path required");
-        return Util.ParseArgsError{};
+var args: Args = .{
+    .rom_path = "",
+};
+fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
+    if (args_raw.len < 1) {
+        return Util.ParseArgsError.MissingRequiredArg;
+    } else if (args_raw.len > 1) {
+        return Util.ParseArgsError.TooManyArgs;
     }
     args = .{
         .rom_path = args_raw[0],
@@ -58,8 +60,7 @@ fn parseArgs(args_raw: [][:0]u8) Util.ParseArgsError!void {
 }
 
 fn displayInfo(allocator: *const std.mem.Allocator) void {
-    const rom_path = args[0];
-    const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
+    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
 
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
     var rom_reader_core = rom_file.reader(&reader_buf);
