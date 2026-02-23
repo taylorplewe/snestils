@@ -17,7 +17,7 @@ pub const ChecksumUtil = struct {
         .description = "write a ROM's correct checksum & complement to its header",
         .usage_lines = &.{
             "<rom-file> [options]",
-            "<rom-file> [-o|--out] <output-file> [options]",
+            "<rom-file> (-o|--out) <output-file> [options]",
         },
         .sections = &.{
             .{

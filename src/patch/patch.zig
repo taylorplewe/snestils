@@ -30,7 +30,7 @@ pub const PatchUtil = struct {
         .description = "apply an IPS, UPS or BPS patch file to a ROM",
         .usage_lines = &.{
             "<rom-file> [-p|--patch] <patch-file> [options]",
-            "<rom-file> [-p|--patch] <patch-file> [-o|--out] <out-file> [options]",
+            "<rom-file> [-p|--patch] <patch-file> (-o|--out) <out-file> [options]",
         },
         .sections = &.{
             .{
@@ -130,7 +130,7 @@ fn patch(allocator: *const std.mem.Allocator) void {
     const patch_buf = patch_reader.allocRemaining(allocator.*, .limited(MAX_ALLOC_SIZE)) catch fatal("could not allocate buffer from patch file");
 
     // original ROM I/O
-    const original_rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_only }) catch fatalFmt("could not open original ROM file \x1b[1m{s}\x1b[0m", .{args.rom_path});
+    const original_rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open original ROM file \x1b[1m{s}\x1b[0m", .{args.rom_path});
     var original_rom_reader_buf: [2048]u8 = undefined;
     var original_rom_file_reader = original_rom_file.reader(&original_rom_reader_buf);
     var original_rom_reader = &original_rom_file_reader.interface;

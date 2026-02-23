@@ -26,11 +26,11 @@ pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args_raw: [][:
     if (self.vtable.parseArgs != null) {
         self.vtable.parseArgs.?(allocator, args_raw) catch |e| {
             switch (e) {
-                ParseArgsError.MissingRequiredArg => fatal("missing required argument"),
-                ParseArgsError.MissingParameterArg => fatal("missing parameter argument"),
-                ParseArgsError.TooManyArgs => fatal("too many arguments"),
+                ParseArgsError.MissingRequiredArg => disp.printError("missing required argument\n", .{}),
+                ParseArgsError.MissingParameterArg => disp.printError("missing parameter argument\n", .{}),
+                ParseArgsError.TooManyArgs => disp.printError("too many arguments\n", .{}),
             }
-            // TODO: print usage as well (can't rn because fatal quits)
+            self.usage.?.printAndExitWithError();
         };
     }
     self.vtable.do(allocator);
