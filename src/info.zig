@@ -27,9 +27,17 @@ pub const InfoUtil = struct {
         .title = "info",
         .description = "print out information about a ROM",
         .usage_lines = &.{
-            "<rom>",
+            "<rom> [options]",
         },
-        .sections = &.{},
+        .sections = &.{
+            .{
+                .title = "Options",
+                .items = &.{
+                    .{ .title = "-h, --help", .description = "display this help text and quit" },
+                    .{ .title = "--overwrite", .description = "overwrite the original ROM file with the patched version" },
+                },
+            },
+        },
     };
     pub fn init() Util {
         return .{

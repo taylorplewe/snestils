@@ -23,6 +23,7 @@ pub const ChecksumUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
+                    .{ .title = "-h, --help", .description = "display this help text and quit" },
                     .{ .title = "--overwrite", .description = "overwrite the original ROM file when fixing the checksum" },
                 },
             },

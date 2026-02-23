@@ -29,6 +29,7 @@ pub const PatchUtil = struct {
         .title = "patch",
         .description = "apply an IPS, UPS or BPS patch file to a ROM",
         .usage_lines = &.{
+            "<rom-file> [options]",
             "<rom-file> [-p|--patch] <patch-file> [options]",
             "<rom-file> [-p|--patch] <patch-file> (-o|--out) <out-file> [options]",
         },
@@ -36,6 +37,7 @@ pub const PatchUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
+                    .{ .title = "-h, --help", .description = "display this help text and quit" },
                     .{ .title = "--overwrite", .description = "overwrite the original ROM file with the patched version" },
                 },
             },

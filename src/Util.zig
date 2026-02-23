@@ -24,6 +24,11 @@ pub const VTable = struct {
 
 pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args_raw: [][:0]u8) void {
     if (self.vtable.parseArgs != null) {
+        for (args_raw) |arg| {
+            if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
+                self.usage.?.printAndExit();
+            }
+        }
         self.vtable.parseArgs.?(allocator, args_raw) catch |e| {
             switch (e) {
                 ParseArgsError.MissingRequiredArg => disp.printError("missing required argument\n", .{}),

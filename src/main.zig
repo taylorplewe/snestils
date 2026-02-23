@@ -52,7 +52,13 @@ pub fn main() void {
     switch (args.len) {
         0...1 => usage.printAndExit(),
         2 => {
-            const util_name = args[1];
+            const util_name = blk: {
+                if (std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "--help")) {
+                    break :blk "help";
+                } else {
+                    break :blk args[1];
+                }
+            };
 
             const util_kind: UtilKind = std.meta.stringToEnum(UtilKind, util_name) orelse .info;
             const util = util_init_funcs[@intFromEnum(util_kind)]();
@@ -99,7 +105,7 @@ const usage = Usage{
                 .{ .title = "fix-checksum", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
                 .{ .title = "split", .description = "repeat a ROM's contents to fill a certain amount of memory" },
                 .{ .title = "patch", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
-                .{ .title = "help", .description = "print this help message and exit" },
+                .{ .title = "-h, --help", .description = "print this help message and exit" },
             },
         },
     },

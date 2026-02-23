@@ -15,9 +15,16 @@ pub const SplitUtil = struct {
         .title = "split",
         .description = "split a ROM file into multiple smaller files of a certain maximum size",
         .usage_lines = &.{
-            "<rom-file>",
+            "<rom-file> [options]",
         },
-        .sections = &.{},
+        .sections = &.{
+            .{
+                .title = "Options",
+                .items = &.{
+                    .{ .title = "-h, --help", .description = "display this help text and quit" },
+                },
+            },
+        },
     };
     pub fn init() Util {
         return .{
