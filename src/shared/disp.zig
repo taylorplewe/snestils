@@ -3,7 +3,11 @@
 
 const std = @import("std");
 
+pub var quiet: bool = false;
 pub fn printf(comptime fmt: []const u8, args: anytype) void {
+    if (quiet) {
+        return;
+    }
     var buf: [1024]u8 = undefined;
     var stdout_writer = std.fs.File.stdout().writer(&buf);
     var stdout = &stdout_writer.interface;
@@ -22,6 +26,9 @@ pub inline fn printLoading(comptime msg: []const u8) void {
 }
 
 pub fn printError(comptime fmt: []const u8, args: anytype) void {
+    if (quiet) {
+        return;
+    }
     var stderr_buf: [1024]u8 = undefined;
     var stderr_writer = std.fs.File.stderr().writer(&stderr_buf);
     var stderr = &stderr_writer.interface;

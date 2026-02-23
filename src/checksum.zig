@@ -92,7 +92,7 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
         // default out filepath
         const original_rom_path_last_index_of_period = std.mem.lastIndexOfScalar(u8, args.rom_path, '.') orelse args.rom_path.len;
         const original_rom_path_base = args.rom_path[0..original_rom_path_last_index_of_period];
-        const original_rom_path_ext = args.rom_path[(original_rom_path_last_index_of_period + 1)..];
+        const original_rom_path_ext = args.rom_path[@min(original_rom_path_last_index_of_period + 1, args.rom_path.len)..];
         args.out_path = std.fmt.allocPrint(allocator.*, "{s}.goodchecksum.{s}", .{ original_rom_path_base, original_rom_path_ext }) catch fatal("could not allocate memory for patched ROM path");
     }
 }
