@@ -41,7 +41,7 @@ pub const PatchUtil = struct {
     }
 };
 
-pub fn patch(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+fn patch(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     if (args.len < 2) {
         fatal("must provide ROM filepath followed by patch filepath");
     }

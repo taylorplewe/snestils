@@ -28,7 +28,7 @@ pub const ChecksumUtil = struct {
     }
 };
 
-pub fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+fn fixChecksum(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
     const rom_path = args[0];
     const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
     defer rom_file.close();

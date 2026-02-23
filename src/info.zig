@@ -34,13 +34,30 @@ pub const InfoUtil = struct {
     };
     pub fn init() Util {
         return .{
-            .vtable = &.{ .do = displayInfo },
+            .vtable = &.{
+                .parseArgs = parseArgs,
+                .do = displayInfo,
+            },
             .usage = usage,
         };
     }
 };
 
-pub fn displayInfo(allocator: *const std.mem.Allocator, args: [][:0]u8) void {
+const Args = struct {
+    rom_path: []const u8,
+};
+var args: Args = undefined;
+fn parseArgs(args_raw: [][:0]u8) Util.ParseArgsError!void {
+    if (args_raw.len != 1) {
+        disp.println("ROM path required");
+        return Util.ParseArgsError{};
+    }
+    args = .{
+        .rom_path = args_raw[0],
+    };
+}
+
+fn displayInfo(allocator: *const std.mem.Allocator) void {
     const rom_path = args[0];
     const rom_file = std.fs.cwd().openFile(rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{rom_path});
 
