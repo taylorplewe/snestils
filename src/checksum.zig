@@ -108,7 +108,7 @@ fn fixChecksum(allocator: *const std.mem.Allocator) void {
     var rom_reader = &rom_reader_core.interface;
 
     const rom_bin = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not read ROM file into buffer for checksum fixing");
-    var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary");
+    var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary. Is it a valid SNES ROM file?");
 
     // calculate checksum
     disp.printLoading("calculating checksum");
