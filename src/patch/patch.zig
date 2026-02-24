@@ -160,12 +160,12 @@ fn patch(allocator: *const std.mem.Allocator) void {
     patcher.apply();
     disp.clearLine();
 
-    // write patched ROM buffer to file
+    disp.printLoading("writing patched data to out file");
     const patched_rom_file = if (args.overwrite) original_rom_file else std.fs.cwd().createFile(args.out_path, .{}) catch fatalFmt("could not open out file {s}", .{args.out_path});
     var patched_rom_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
     var patched_rom_file_writer = patched_rom_file.writer(&patched_rom_writer_buf);
     var patched_rom_writer = &patched_rom_file_writer.interface;
     patched_rom_writer.writeAll(patcher.patched_rom.items) catch fatal("could not write patched ROM buffer to file");
-
+    disp.clearLine();
     disp.printf("\n\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{args.out_path});
 }
