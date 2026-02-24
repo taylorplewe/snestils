@@ -26,6 +26,7 @@ const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
 const InfoUtil = @import("info.zig").InfoUtil;
 const PatchUtil = @import("patch/patch.zig").PatchUtil;
 const SplitUtil = @import("split.zig").SplitUtil;
+const JoinUtil = @import("join.zig").JoinUtil;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
@@ -34,6 +35,7 @@ const UtilKind = enum {
     @"fix-checksum",
     split,
     patch,
+    join,
     help,
 };
 const util_init_funcs = [_]*const fn () Util{
@@ -41,6 +43,7 @@ const util_init_funcs = [_]*const fn () Util{
     ChecksumUtil.init,
     SplitUtil.init,
     PatchUtil.init,
+    JoinUtil.init,
     HelpUtil.init,
 };
 
@@ -116,6 +119,7 @@ const usage = Usage{
                 .{ .shorthand = "", .title = "fix-checksum", .arg = "", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
                 .{ .shorthand = "", .title = "split", .arg = "", .description = "repeat a ROM's contents to fill a certain amount of memory" },
                 .{ .shorthand = "", .title = "patch", .arg = "", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
+                .{ .shorthand = "", .title = "join", .arg = "", .description = "join split binary chunks into a single ROM file" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
             },
         },
