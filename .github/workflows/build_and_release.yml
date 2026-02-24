@@ -1,0 +1,60 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag. Should follow `major.minor.patch` semver pattern, without the 'v' prefix"
+        required: true
+        type: string
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-macos
+            archivefmt: tar
+          - target: aarch64-macos
+            archivefmt: tar
+          - target: x86_64-linux
+            archivefmt: tar
+          - target: aarch64-macos
+            archivefmt: tar
+          - target: x86_64-windows
+            archivefmt: zip
+          - target: aarch64-windows
+            archivefmt: zip 
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+      - run: zig build --release=fast -Drelease=true -Dtarget=${{ matrix.target }}
+      - if: ${{ matrix.archivefmt == 'zip' }}
+        run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip zig-out/bin/*
+      - if: ${{ matrix.archivefmt == 'tar' }}
+        run: tar -czf snestils-${{ inputs.tag }}-${{ matrix.target }}.tar.gz zig-out/bin/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.target }}
+          path: snestils-*
+        
+  release:
+    needs: build
+    name: Publish release v${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - id: download-artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: artifact-*
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.tag }}
+          files: ${{ steps.download-artifacts.outputs.download-path }}/*
+          draft: true # I can then go in and add a body manually before publishing
