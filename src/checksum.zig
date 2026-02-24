@@ -13,17 +13,17 @@ const Util = @import("Util.zig");
 
 pub const ChecksumUtil = struct {
     pub const usage: Usage = .{
-        .title = "fix-checksum",
+        .title = shared.PROGRAM_NAME ++ " fix-checksum",
         .description = "write a ROM's correct checksum & complement to its header",
         .usage_lines = &.{
             "<rom-file> [options]",
-            "<rom-file> (-o|--out) <output-file> [options]",
         },
         .sections = &.{
             .{
                 .title = "Options",
                 .items = &.{
                     .{ .title = "-h, --help", .description = "display this help text and quit" },
+                    .{ .title = "-o <file>, --out <file>", .description = "specify the file to write to" },
                     .{ .title = "--overwrite", .description = "overwrite the original ROM file when fixing the checksum" },
                 },
             },

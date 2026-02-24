@@ -24,7 +24,7 @@ const FormatSpecifier = enum {
 
 pub const InfoUtil = struct {
     pub const usage: Usage = .{
-        .title = "info",
+        .title = shared.PROGRAM_NAME ++ "info",
         .description = "print out information about a ROM",
         .usage_lines = &.{
             "<rom> [options]",

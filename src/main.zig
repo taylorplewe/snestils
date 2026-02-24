@@ -89,9 +89,8 @@ const HelpUtil = struct {
     }
 };
 
-const EXE = if (builtin.os.tag == .windows) ".exe" else "";
 const usage = Usage{
-    .title = "snestils" ++ EXE,
+    .title = shared.PROGRAM_NAME,
     .description = "suite of SNES ROM utilities",
     .usage_lines = &.{
         "<util> [options]",

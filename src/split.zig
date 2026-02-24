@@ -12,7 +12,7 @@ const Util = @import("Util.zig");
 
 pub const SplitUtil = struct {
     pub const usage: Usage = .{
-        .title = "split",
+        .title = shared.PROGRAM_NAME ++ "split",
         .description = "split a ROM file into multiple smaller files of a certain maximum size",
         .usage_lines = &.{
             "<rom-file> [options]",
