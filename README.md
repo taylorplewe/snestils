@@ -13,6 +13,7 @@ For the time being, this project is licensed under the GNU General Public Licens
 | `info` | Display all relevant information about a ROM such as the internal checksums, ROM size, version number and title |
 | `fix-checksum` | Fix the internal ROM's checksum and complement |
 | `split` | Split the ROM file into different size chunks, for writing to various (E)EPROMs |
+| `join` | Join previously split binary chunks into a single ROM file |
 | `patch` | Apply a patch file to a ROM |
 
 ### Supported patch file types
