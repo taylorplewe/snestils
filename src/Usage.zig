@@ -35,7 +35,7 @@ pub fn printAndExitWithCode(self: *const Usage, code: u8) noreturn {
         disp.printf("\n{s}:\n", .{section.title});
         for (section.items) |item| {
             var shorthand_buf: [4]u8 = undefined;
-            disp.printf(TAB_SHORTHAND ++ "\x1b[0;33m{s:<4}{s:<12}\x1b[90m{s:<8}\x1b[0m{s}\n", .{
+            disp.printf(TAB_SHORTHAND ++ "\x1b[0;33m{s:<4}{s:<14}\x1b[90m{s:<8}\x1b[0m{s}\n", .{
                 if (item.shorthand.len > 0) std.fmt.bufPrint(&shorthand_buf, "{s},", .{item.shorthand}) catch unreachable else "",
                 item.title,
                 item.arg,

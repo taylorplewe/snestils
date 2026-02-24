@@ -35,6 +35,7 @@ pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args_raw: [][:
                 ParseArgsError.MissingRequiredArg => disp.printError("missing required argument\n", .{}),
                 ParseArgsError.MissingParameterArg => disp.printError("missing parameter argument\n", .{}),
                 ParseArgsError.TooManyArgs => disp.printError("too many arguments\n", .{}),
+                ParseArgsError.InvalidArgFormat => disp.printError("invalid argument format\n", .{}),
             }
             self.usage.?.printAndExitWithError();
         };
@@ -46,4 +47,5 @@ pub const ParseArgsError = error{
     MissingRequiredArg,
     MissingParameterArg,
     TooManyArgs,
+    InvalidArgFormat,
 };

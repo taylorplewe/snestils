@@ -120,7 +120,7 @@ const usage = Usage{
             .items = &.{
                 .{ .shorthand = "", .title = "info", .arg = "", .description = "print out information about a ROM" },
                 .{ .shorthand = "", .title = "fix-checksum", .arg = "", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
-                .{ .shorthand = "", .title = "split", .arg = "", .description = "repeat a ROM's contents to fill a certain amount of memory" },
+                .{ .shorthand = "", .title = "split", .arg = "", .description = "split a ROM file into multiple smaller files of a certain maximum size" },
                 .{ .shorthand = "", .title = "patch", .arg = "", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
                 .{ .shorthand = "", .title = "join", .arg = "", .description = "join split binary chunks into a single ROM file" },
                 .{ .shorthand = "", .title = "remove-header", .arg = "", .description = "remove a ROM's 512-byte copier device header, if it has one" },
