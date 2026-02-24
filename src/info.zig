@@ -24,7 +24,7 @@ const FormatSpecifier = enum {
 
 pub const InfoUtil = struct {
     pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ "info",
+        .title = shared.PROGRAM_NAME ++ " info",
         .description = "print out information about a ROM",
         .usage_lines = &.{
             "<rom> [options]",
@@ -81,7 +81,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
 
     const map_mode: SnesRom.SnesRomHeader.MapMode = @enumFromInt(rom.header.mode & 0x0f);
     displayInfoRow("Title", .String, &rom.header.title);
-    displayInfoRow("Developer", .String, rom.getDeveloperName() orelse "Unkown (demo or beta ROM?)");
+    displayInfoRow("Developer", .String, rom.getDeveloperName() orelse "Unknown (demo or beta ROM?)");
     displayInfoRow("Version", .VersionNumber, rom.header.version);
     displayInfoRow("Region", .String, rom.header.region.getDisplayName());
     if (rom.extended_header != null) {

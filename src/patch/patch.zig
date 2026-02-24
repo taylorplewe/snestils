@@ -26,7 +26,7 @@ const PatchFormat = enum {
 
 pub const PatchUtil = struct {
     pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ "patch",
+        .title = shared.PROGRAM_NAME ++ " patch",
         .description = "apply an IPS, UPS or BPS patch file to a ROM",
         .usage_lines = &.{
             "<rom-file> [options]",
@@ -39,6 +39,7 @@ pub const PatchUtil = struct {
                     .{ .title = "-h, --help", .description = "display this help text and quit" },
                     .{ .title = "-o <file>, --out <file>", .description = "specify the file to write to" },
                     .{ .title = "--overwrite", .description = "overwrite the original ROM file with the patched version" },
+                    .{ .title = "--quiet", .description = "do not output anything to stdout" },
                 },
             },
         },

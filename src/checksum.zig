@@ -25,6 +25,7 @@ pub const ChecksumUtil = struct {
                     .{ .title = "-h, --help", .description = "display this help text and quit" },
                     .{ .title = "-o <file>, --out <file>", .description = "specify the file to write to" },
                     .{ .title = "--overwrite", .description = "overwrite the original ROM file when fixing the checksum" },
+                    .{ .title = "--quiet", .description = "do not output anything to stdout" },
                 },
             },
         },

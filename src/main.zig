@@ -47,7 +47,18 @@ pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
-    const args = std.process.argsAlloc(arena.allocator()) catch fatal("unable to allocate memory for arguments");
+    const args: [][:0]u8 = blk: {
+        var kept_args: std.ArrayList([:0]u8) = .empty;
+        var args_it = std.process.argsWithAllocator(arena.allocator()) catch fatal("could not allocate memory for args iterator");
+        while (args_it.next()) |arg| {
+            if (std.mem.eql(u8, arg, "--quiet")) {
+                disp.quiet = true;
+            } else {
+                kept_args.append(arena.allocator(), @constCast(arg)) catch fatal("could not allocate memory for next argument");
+            }
+        }
+        break :blk kept_args.items;
+    };
 
     switch (args.len) {
         0...1 => usage.printAndExit(),
