@@ -28,7 +28,7 @@ jobs:
           version: 0.15.2
       - run: zig build --release=fast -Drelease=true -Dtarget=${{ matrix.target }}
       - if: endsWith(matrix.target, 'windows')
-        run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip zig-out/bin/snestils.exe
+        run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip -j zig-out/bin/snestils.exe
       - if: ${{ ! endsWith(matrix.target, 'windows') }}
         run: tar -czf snestils-${{ inputs.tag }}-${{ matrix.target }}.tar.gz -C zig-out/bin snestils
       - uses: actions/upload-artifact@v4
