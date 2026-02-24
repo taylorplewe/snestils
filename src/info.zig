@@ -33,7 +33,7 @@ pub const InfoUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
-                    .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file with the patched version" },
+                    .{ .shorthand = "", .title = "--no-hashes", .arg = "", .description = "do not calculate & show hashes for ROM" },
                     .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
                 },
             },
@@ -52,19 +52,27 @@ pub const InfoUtil = struct {
 
 const Args = struct {
     rom_path: []const u8,
+    no_hashes: bool,
 };
 var args: Args = .{
     .rom_path = "",
+    .no_hashes = false,
 };
 fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
     if (args_raw.len < 1) {
         return Util.ParseArgsError.MissingRequiredArg;
-    } else if (args_raw.len > 1) {
-        return Util.ParseArgsError.TooManyArgs;
     }
-    args = .{
-        .rom_path = args_raw[0],
-    };
+    for (args_raw) |arg| {
+        if (std.mem.eql(u8, arg, "--no-hashes")) {
+            args.no_hashes = true;
+        } else {
+            if (args.rom_path.len == 0) {
+                args.rom_path = arg;
+            } else {
+                return Util.ParseArgsError.TooManyArgs;
+            }
+        }
+    }
 }
 
 fn displayInfo(allocator: *const std.mem.Allocator) void {
@@ -88,7 +96,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
         displayInfoRow("Game code", .String, rom.extended_header.?.game_code);
     }
     displayInfoRow("ROM size", .RomSize, rom.getPhysicalRomSizeMegabits());
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), @as(f32, @floatFromInt(rom.getInternalRomSizeMegabits())) / 8 });
     displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
@@ -106,6 +114,11 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
     disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
     disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
     displayInfoRow("Has copier header", .String, if (rom.hasCopierHeader()) "Yes" else "No");
+
+    if (args.no_hashes) {
+        disp.println("");
+        return;
+    }
 
     disp.printf("\n\n", .{});
 
@@ -127,8 +140,6 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
     displayInfoRow("SHA256", .HexNumber, sha256);
 
     disp.println("");
-
-    // fatal("SNES ROM header was not found at any of the expected addresses");
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
@@ -138,7 +149,7 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
         .String => disp.printf(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
         .HexNumber => disp.printf(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.printf(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
-        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
+        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, @as(f32, @floatFromInt(value)) / 8 }),
+        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, @as(f32, @floatFromInt(value)) / 8 }),
     }
 }
