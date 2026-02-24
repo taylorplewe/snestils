@@ -21,7 +21,7 @@ jobs:
             archivefmt: tar
           - target: x86_64-linux
             archivefmt: tar
-          - target: aarch64-macos
+          - target: aarch64-linux
             archivefmt: tar
           - target: x86_64-windows
             archivefmt: zip
