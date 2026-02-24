@@ -36,7 +36,7 @@ jobs:
       - if: ${{ matrix.archivefmt == 'zip' }}
         run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip zig-out/bin/*
       - if: ${{ matrix.archivefmt == 'tar' }}
-        run: tar -czf snestils-${{ inputs.tag }}-${{ matrix.target }}.tar.gz zig-out/bin/*
+        run: tar -czf snestils-${{ inputs.tag }}-${{ matrix.target }}.tar.gz -C zig-out/bin snestils
       - uses: actions/upload-artifact@v4
         with:
           name: artifact-${{ matrix.target }}
