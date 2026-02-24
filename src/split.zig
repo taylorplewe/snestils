@@ -21,8 +21,8 @@ pub const SplitUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
-                    .{ .title = "-h, --help", .description = "display this help text and quit" },
-                    .{ .title = "--quiet", .description = "do not output anything to stdout" },
+                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
                 },
             },
         },

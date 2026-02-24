@@ -36,10 +36,11 @@ pub const PatchUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
-                    .{ .title = "-h, --help", .description = "display this help text and quit" },
-                    .{ .title = "-o <file>, --out <file>", .description = "specify the file to write to" },
-                    .{ .title = "--overwrite", .description = "overwrite the original ROM file with the patched version" },
-                    .{ .title = "--quiet", .description = "do not output anything to stdout" },
+                    .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
+                    .{ .shorthand = "-p", .title = "--patch", .arg = "<file>", .description = "specify the path to the patch file" },
+                    .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file with the patched version" },
+                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
                 },
             },
         },

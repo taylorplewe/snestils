@@ -33,8 +33,8 @@ pub const InfoUtil = struct {
             .{
                 .title = "Options",
                 .items = &.{
-                    .{ .title = "-h, --help", .description = "display this help text and quit" },
-                    .{ .title = "--overwrite", .description = "overwrite the original ROM file with the patched version" },
+                    .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file with the patched version" },
+                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
                 },
             },
         },

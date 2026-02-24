@@ -111,11 +111,11 @@ const usage = Usage{
         .{
             .title = "Utils",
             .items = &.{
-                .{ .title = "info", .description = "print out information about a ROM" },
-                .{ .title = "fix-checksum", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
-                .{ .title = "split", .description = "repeat a ROM's contents to fill a certain amount of memory" },
-                .{ .title = "patch", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
-                .{ .title = "-h, --help", .description = "print this help message and exit" },
+                .{ .shorthand = "", .title = "info", .arg = "", .description = "print out information about a ROM" },
+                .{ .shorthand = "", .title = "fix-checksum", .arg = "", .description = "calculate the ROM's correct checksum and write it to the ROM's internal header" },
+                .{ .shorthand = "", .title = "split", .arg = "", .description = "repeat a ROM's contents to fill a certain amount of memory" },
+                .{ .shorthand = "", .title = "patch", .arg = "", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
+                .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
             },
         },
     },
