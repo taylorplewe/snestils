@@ -4,10 +4,12 @@
 // the IPS patch file format documentation I used can be found here: https://zerosoft.zophar.net/ips.php
 
 const std = @import("std");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
+
 const Patcher = @import("./Patcher.zig");
 
 const IpsPatcher = @This();

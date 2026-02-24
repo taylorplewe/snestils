@@ -4,9 +4,11 @@
 //! An interface which any patch format must implement
 
 const std = @import("std");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
+
 const Patcher = @This();
 
 vtable: *const VTable,

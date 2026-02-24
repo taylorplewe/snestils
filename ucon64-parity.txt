@@ -1,0 +1,22 @@
+00007fb0  45 34 41 59  55 4a 00 00  00 00 00 00  00 00 00 00  E4AYUJ..........
+00007fc0  42 75 73 68  69 20 53 65  69 72 79 75  64 65 6e 20  Bushi Seiryuden
+00007fd0  20 20 20 20  20 30 02 0c  01 00 33 00  bc b2 43 4d       0....3...CM
+
+Super Nintendo Entertainment System/SNES/Super Famicom
+Bushi Seiryuden
+T&ESoft
+Japan
+3145728 Bytes (24.0000 Mb)
+
+Padded: Maybe, 1516 Bytes (0.0116 Mb)
+Interleaved/Swapped: No
+Backup unit/emulator header: No
+HiROM: No
+Internal size: 32 Mb
+ROM type: (2) ROM + SRAM + Battery
+ROM speed: 120 ns (FastROM)
+SRAM: Yes, 2 kBytes
+Version: 1.0
+Checksum: OK, 0x4d43 (calculated) == 0x4d43 (internal)
+Inverse checksum: OK, 0xb2bc (calculated) == 0xb2bc (internal)
+Checksum (CRC32): 0x62d31295

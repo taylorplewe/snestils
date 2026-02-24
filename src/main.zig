@@ -16,17 +16,18 @@
 
 const std = @import("std");
 const builtin = @import("builtin");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
+const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
+const InfoUtil = @import("info.zig").InfoUtil;
+const PatchUtil = @import("patch/patch.zig").PatchUtil;
+const SplitUtil = @import("split.zig").SplitUtil;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
-const InfoUtil = @import("info.zig").InfoUtil;
-const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
-const SplitUtil = @import("split.zig").SplitUtil;
-const PatchUtil = @import("patch/patch.zig").PatchUtil;
 
 const UtilKind = enum {
     info,

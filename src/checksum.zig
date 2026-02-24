@@ -2,12 +2,13 @@
 // See `main.zig` for full usage and warranty notice
 
 const std = @import("std");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
-
 const SnesRom = shared.SnesRom;
+
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 

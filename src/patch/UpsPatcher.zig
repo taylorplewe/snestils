@@ -4,10 +4,12 @@
 // the UPS patch file format documentation I used can be found here: http://justsolve.archiveteam.org/wiki/UPS_(binary_patch_format)
 
 const std = @import("std");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
+
 const Patcher = @import("./Patcher.zig");
 
 const UpsPatcher = @This();

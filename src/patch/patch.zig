@@ -2,6 +2,7 @@
 // See `main.zig` for full usage and warranty notice
 
 const std = @import("std");
+
 const shared = @import("shared");
 const disp = shared.disp;
 const fatal = disp.fatal;
@@ -9,10 +10,10 @@ const fatalFmt = disp.fatalFmt;
 
 const Usage = @import("../Usage.zig");
 const Util = @import("../Util.zig");
-const Patcher = @import("./Patcher.zig");
-const IpsPatcher = @import("./IpsPatcher.zig");
-const UpsPatcher = @import("./UpsPatcher.zig");
 const BpsPatcher = @import("./BpsPatcher.zig");
+const IpsPatcher = @import("./IpsPatcher.zig");
+const Patcher = @import("./Patcher.zig");
+const UpsPatcher = @import("./UpsPatcher.zig");
 
 /// Maximum allocation size for each file's buffer
 /// This is *not* the amount that is requested, but rather the value passed to `limit` when allocation is delegated elsewhere
