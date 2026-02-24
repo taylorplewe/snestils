@@ -16,26 +16,20 @@ jobs:
       matrix:
         include:
           - target: x86_64-macos
-            archivefmt: tar
           - target: aarch64-macos
-            archivefmt: tar
           - target: x86_64-linux
-            archivefmt: tar
           - target: aarch64-linux
-            archivefmt: tar
           - target: x86_64-windows
-            archivefmt: zip
           - target: aarch64-windows
-            archivefmt: zip 
     steps:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.15.2
       - run: zig build --release=fast -Drelease=true -Dtarget=${{ matrix.target }}
-      - if: ${{ matrix.archivefmt == 'zip' }}
-        run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip zig-out/bin/*
-      - if: ${{ matrix.archivefmt == 'tar' }}
+      - if: endsWith(matrix.target, 'windows')
+        run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip zig-out/bin/snestils.exe
+      - if: ${{ ! endsWith(matrix.target, 'windows') }}
         run: tar -czf snestils-${{ inputs.tag }}-${{ matrix.target }}.tar.gz -C zig-out/bin snestils
       - uses: actions/upload-artifact@v4
         with:
