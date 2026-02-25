@@ -54,7 +54,6 @@ pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
-    // test
     const args: [][:0]u8 = blk: {
         var kept_args: std.ArrayList([:0]u8) = .empty;
         var args_it = std.process.argsWithAllocator(arena.allocator()) catch fatal("could not allocate memory for args iterator");
