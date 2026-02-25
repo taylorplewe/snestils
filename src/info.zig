@@ -34,6 +34,7 @@ const usage: Usage = .{
             .title = "Options",
             .items = &.{
                 .{ .shorthand = "", .title = "--no-hashes", .arg = "", .description = "do not calculate & show hashes for ROM" },
+                .{ .shorthand = "", .title = "--no-hexdump", .arg = "", .description = "do not show hexdump of ROM header" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
             },
         },
@@ -50,10 +51,12 @@ pub const info_util: Util = .{
 const Args = struct {
     rom_path: []const u8,
     no_hashes: bool,
+    no_hexdump: bool,
 };
 var args: Args = .{
     .rom_path = "",
     .no_hashes = false,
+    .no_hexdump = false,
 };
 fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
     if (args_raw.len < 1) {
@@ -62,6 +65,8 @@ fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsErro
     for (args_raw) |arg| {
         if (std.mem.eql(u8, arg, "--no-hashes")) {
             args.no_hashes = true;
+        } else if (std.mem.eql(u8, arg, "--no-hexdump")) {
+            args.no_hexdump = true;
         } else {
             if (args.rom_path.len == 0) {
                 args.rom_path = arg;
@@ -83,6 +88,8 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
     var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary");
 
     disp.println("");
+
+    displayHexdump(rom.header_addr - 16, rom_bin[rom.header_addr - 16 .. rom.header_addr + 32]);
 
     const map_mode: SnesRom.SnesRomHeader.MapMode = @enumFromInt(rom.header.mode & 0x0f);
     displayInfoRow("Title", .String, &rom.header.title);
@@ -148,5 +155,31 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
         .VersionNumber => disp.printf(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
         .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, @as(f32, @floatFromInt(value)) / 8 }),
         .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, @as(f32, @floatFromInt(value)) / 8 }),
+    }
+}
+
+fn displayHexdump(addr: u24, data: []const u8) void {
+    var i: usize = 0;
+    while (i < data.len) : (i += 16) {
+        disp.printf("\x1b[48;2;64;64;64m", .{});
+        disp.printf("{x:0>8} ", .{addr + i});
+        disp.printf("\x1b[48;2;32;32;32m ", .{});
+        for (0..4) |group| {
+            for (0..4) |j| {
+                disp.printf("{x:0>2} ", .{data[i + (group * 4 + j)]});
+            }
+            if (group < 3) {
+                disp.printf(" ", .{});
+            }
+        }
+        disp.printf("\x1b[48;2;64;64;64m", .{});
+        disp.printf(" {s: >16}", .{data[i .. i + 16]});
+        disp.println("");
+
+        // disp.printf("\x1b[90m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m", .{ "Hexdump", current_addr });
+        // for (data[i..][0..16]) |byte| {
+        //     disp.printf("{x}", .{byte});
+        // }
+        // disp.println("\x1b[0m");
     }
 }
