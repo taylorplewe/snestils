@@ -76,11 +76,15 @@ pub fn takeVariableWidthInteger(data: []u8, idx: *usize) usize {
 }
 
 /// Calculates a 32-bit CRC checksum from a slice of bytes.
-/// I am aware of std.hash.Crc32--see `src/info.zig` for an example of it in use
 ///
-/// I didn't hear about it until after I had already written my own implemnetation here. I'm keeping this around because
+/// I am aware of std.hash.Crc32--see `src/info.zig` for an example of it in use. I didn't know about it until after I had already written my own implemnetation here. I'm keeping this around because
 /// - It's a much simpler implementation than that in the standard library
-/// - It taught me about unit testing in Zig and generating a static table at comptime, both of which I'm not ready to just throw away
+/// - It taught me about
+///   - unit testing in Zig
+///   - generating a static table at comptime, and
+///   - calculating a CRC32 hash
+///
+///   the findings of which I'm not keen on just tossing out
 pub fn calcCrc32(data: []const u8) u32 {
     var crc32: u32 = 0xffffffff;
     for (data) |byte| {

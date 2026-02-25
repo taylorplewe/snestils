@@ -90,7 +90,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
     var rom_reader = &rom_reader_core.interface;
 
     const rom_bin = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");
-    var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary");
+    var rom = SnesRom.fromBin(rom_bin) catch fatal("could not create SnesRom struct from binary. Is it a valid SNES ROM file?");
 
     disp.println("");
 
@@ -173,7 +173,8 @@ fn displayHexdump(addr: u24, data: []const u8) void {
         } else {
             disp.printf(" {x:0>8} ", .{addr + i});
         }
-        disp.printf("│ \x1b[38;2;255;255;255m", .{});
+        // disp.printf("\x1b[38;2;255;255;255m", .{});
+        disp.printf("\x1b[0m", .{});
 
         // disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
         for (0..4) |group| {
@@ -189,7 +190,7 @@ fn displayHexdump(addr: u24, data: []const u8) void {
             }
         }
         // disp.printf("\x1b[48;2;32;32;32m\x1b[38;2;190;190;190m ", .{});
-        disp.printf("│ ", .{});
+        disp.printf("\x1b[90m", .{});
         for (i..i + 16) |c| {
             if (std.ascii.isPrint(data[c])) {
                 disp.printf("{c}", .{data[c]});
