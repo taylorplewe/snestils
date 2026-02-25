@@ -25,36 +25,32 @@ const PatchFormat = enum {
     bps,
 };
 
-pub const PatchUtil = struct {
-    pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ " patch",
-        .description = "apply an IPS, UPS or BPS patch file to a ROM",
-        .usage_lines = &.{
-            "<rom-file> [options]",
-            "<rom-file> [-p|--patch] <patch-file> [options]",
-        },
-        .sections = &.{
-            .{
-                .title = "Options",
-                .items = &.{
-                    .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
-                    .{ .shorthand = "-p", .title = "--patch", .arg = "<file>", .description = "specify the path to the patch file" },
-                    .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file with the patched version" },
-                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
-                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
-                },
+const usage: Usage = .{
+    .title = shared.PROGRAM_NAME ++ " patch",
+    .description = "apply an IPS, UPS or BPS patch file to a ROM",
+    .usage_lines = &.{
+        "<rom-file> [options]",
+        "<rom-file> [-p|--patch] <patch-file> [options]",
+    },
+    .sections = &.{
+        .{
+            .title = "Options",
+            .items = &.{
+                .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
+                .{ .shorthand = "-p", .title = "--patch", .arg = "<file>", .description = "specify the path to the patch file" },
+                .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file with the patched version" },
+                .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
             },
         },
-    };
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = parseArgs,
-                .do = patch,
-            },
-            .usage = usage,
-        };
-    }
+    },
+};
+pub const patch_util: Util = .{
+    .vtable = &.{
+        .parseArgs = parseArgs,
+        .do = patch,
+    },
+    .usage = usage,
 };
 const Args = struct {
     rom_path: []const u8,

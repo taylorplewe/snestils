@@ -23,32 +23,28 @@ const FormatSpecifier = enum {
     RamSize,
 };
 
-pub const InfoUtil = struct {
-    pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ " info",
-        .description = "print out information about a ROM",
-        .usage_lines = &.{
-            "<rom> [options]",
-        },
-        .sections = &.{
-            .{
-                .title = "Options",
-                .items = &.{
-                    .{ .shorthand = "", .title = "--no-hashes", .arg = "", .description = "do not calculate & show hashes for ROM" },
-                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
-                },
+const usage: Usage = .{
+    .title = shared.PROGRAM_NAME ++ " info",
+    .description = "print out information about a ROM",
+    .usage_lines = &.{
+        "<rom> [options]",
+    },
+    .sections = &.{
+        .{
+            .title = "Options",
+            .items = &.{
+                .{ .shorthand = "", .title = "--no-hashes", .arg = "", .description = "do not calculate & show hashes for ROM" },
+                .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
             },
         },
-    };
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = parseArgs,
-                .do = displayInfo,
-            },
-            .usage = usage,
-        };
-    }
+    },
+};
+pub const info_util: Util = .{
+    .vtable = &.{
+        .parseArgs = parseArgs,
+        .do = displayInfo,
+    },
+    .usage = usage,
 };
 
 const Args = struct {

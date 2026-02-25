@@ -12,34 +12,30 @@ const SnesRom = shared.SnesRom;
 const Util = @import("Util.zig");
 const Usage = @import("Usage.zig");
 
-pub const RemoveHeaderUtil = struct {
-    pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ " remove-header",
-        .description = "remove a ROM's 512-byte copier device header, if it has one",
-        .usage_lines = &.{
-            "<rom-file> [options]",
-        },
-        .sections = &.{
-            .{
-                .title = "Options",
-                .items = &.{
-                    .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
-                    .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file when fixing the checksum" },
-                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
-                    .{ .shorthand = "-h", .title = " --help", .arg = "", .description = "display this help text and quit" },
-                },
+const usage: Usage = .{
+    .title = shared.PROGRAM_NAME ++ " remove-header",
+    .description = "remove a ROM's 512-byte copier device header, if it has one",
+    .usage_lines = &.{
+        "<rom-file> [options]",
+    },
+    .sections = &.{
+        .{
+            .title = "Options",
+            .items = &.{
+                .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
+                .{ .shorthand = "", .title = "--overwrite", .arg = "", .description = "overwrite the original ROM file when fixing the checksum" },
+                .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                .{ .shorthand = "-h", .title = " --help", .arg = "", .description = "display this help text and quit" },
             },
         },
-    };
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = parseArgs,
-                .do = removeHeader,
-            },
-            .usage = usage,
-        };
-    }
+    },
+};
+pub const remove_header_util: Util = .{
+    .vtable = &.{
+        .parseArgs = parseArgs,
+        .do = removeHeader,
+    },
+    .usage = usage,
 };
 
 const Args = struct {

@@ -22,12 +22,12 @@ const disp = shared.disp;
 const fatal = disp.fatal;
 const fatalFmt = disp.fatalFmt;
 
-const ChecksumUtil = @import("checksum.zig").ChecksumUtil;
-const InfoUtil = @import("info.zig").InfoUtil;
-const PatchUtil = @import("patch/patch.zig").PatchUtil;
-const SplitUtil = @import("split.zig").SplitUtil;
-const JoinUtil = @import("join.zig").JoinUtil;
-const RemoveHeaderUtil = @import("remove_header.zig").RemoveHeaderUtil;
+const checksum_util = @import("checksum.zig").checksum_util;
+const info_util = @import("info.zig").info_util;
+const patch_util = @import("patch/patch.zig").patch_util;
+const split_util = @import("split.zig").split_util;
+const join_util = @import("join.zig").join_util;
+const remove_header_util = @import("remove_header.zig").remove_header_util;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
@@ -40,14 +40,14 @@ const UtilKind = enum {
     @"remove-header",
     help,
 };
-const util_init_funcs = [_]*const fn () Util{
-    InfoUtil.init,
-    ChecksumUtil.init,
-    SplitUtil.init,
-    PatchUtil.init,
-    JoinUtil.init,
-    RemoveHeaderUtil.init,
-    HelpUtil.init,
+const utils = [_]Util{
+    info_util,
+    checksum_util,
+    split_util,
+    patch_util,
+    join_util,
+    remove_header_util,
+    help_util,
 };
 
 pub fn main() void {
@@ -79,32 +79,28 @@ pub fn main() void {
             };
 
             const util_kind: UtilKind = std.meta.stringToEnum(UtilKind, util_name) orelse .info;
-            const util = util_init_funcs[@intFromEnum(util_kind)]();
+            const util = utils[@intFromEnum(util_kind)];
             util.do(&arena.allocator(), if (util_kind == .info) args[1..2] else &.{});
         },
         else => {
             const util_name = args[1];
 
             const util_kind = std.meta.stringToEnum(UtilKind, util_name) orelse fatalFmt("no util found with name \x1b[1m{s}\x1b[0m\n", .{util_name});
-            const util = util_init_funcs[@intFromEnum(util_kind)]();
+            const util = utils[@intFromEnum(util_kind)];
             util.do(&arena.allocator(), args[2..]);
         },
     }
 }
 
-const HelpUtil = struct {
-    fn printHelp(_: *const std.mem.Allocator) void {
-        usage.printAndExit();
-    }
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = null,
-                .do = printHelp,
-            },
-            .usage = null,
-        };
-    }
+fn printHelp(_: *const std.mem.Allocator) void {
+    usage.printAndExit();
+}
+const help_util: Util = .{
+    .vtable = &.{
+        .parseArgs = null,
+        .do = printHelp,
+    },
+    .usage = null,
 };
 
 const usage = Usage{

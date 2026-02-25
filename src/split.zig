@@ -11,33 +11,29 @@ const fatalFmt = disp.fatalFmt;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
-pub const SplitUtil = struct {
-    pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ " split",
-        .description = "split a ROM file into multiple smaller files of a certain maximum size",
-        .usage_lines = &.{
-            "<rom-file> [options]",
-        },
-        .sections = &.{
-            .{
-                .title = "Options",
-                .items = &.{
-                    .{ .shorthand = "-s", .title = "--size", .arg = "<size>", .description = "specify the maximum size in KiB each split file should be (512, 1024 or 2048)" },
-                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
-                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
-                },
+const usage: Usage = .{
+    .title = shared.PROGRAM_NAME ++ " split",
+    .description = "split a ROM file into multiple smaller files of a certain maximum size",
+    .usage_lines = &.{
+        "<rom-file> [options]",
+    },
+    .sections = &.{
+        .{
+            .title = "Options",
+            .items = &.{
+                .{ .shorthand = "-s", .title = "--size", .arg = "<size>", .description = "specify the maximum size in KiB each split file should be (512, 1024 or 2048)" },
+                .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
             },
         },
-    };
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = parseArgs,
-                .do = split,
-            },
-            .usage = usage,
-        };
-    }
+    },
+};
+pub const split_util: Util = .{
+    .vtable = &.{
+        .parseArgs = parseArgs,
+        .do = split,
+    },
+    .usage = usage,
 };
 
 const Args = struct {

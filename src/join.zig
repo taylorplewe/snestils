@@ -11,33 +11,29 @@ const fatalFmt = disp.fatalFmt;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
-pub const JoinUtil = struct {
-    pub const usage: Usage = .{
-        .title = shared.PROGRAM_NAME ++ " join",
-        .description = "join multiple binary files into a single output file",
-        .usage_lines = &.{
-            "<bin-file> [<bin-file> ...] [options]",
-        },
-        .sections = &.{
-            .{
-                .title = "Options",
-                .items = &.{
-                    .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
-                    .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
-                    .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
-                },
+const usage: Usage = .{
+    .title = shared.PROGRAM_NAME ++ " join",
+    .description = "join multiple binary files into a single output file",
+    .usage_lines = &.{
+        "<bin-file> [<bin-file> ...] [options]",
+    },
+    .sections = &.{
+        .{
+            .title = "Options",
+            .items = &.{
+                .{ .shorthand = "-o", .title = "--out", .arg = "<file>", .description = "specify the file to write to" },
+                .{ .shorthand = "", .title = "--quiet", .arg = "", .description = "do not output anything to stdout" },
+                .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
             },
         },
-    };
-    pub fn init() Util {
-        return .{
-            .vtable = &.{
-                .parseArgs = parseArgs,
-                .do = join,
-            },
-            .usage = usage,
-        };
-    }
+    },
+};
+pub const join_util: Util = .{
+    .vtable = &.{
+        .parseArgs = parseArgs,
+        .do = join,
+    },
+    .usage = usage,
 };
 
 const Args = struct {
