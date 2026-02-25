@@ -67,6 +67,7 @@ pub fn main() void {
         break :blk kept_args.items;
     };
 
+    // test
     switch (args.len) {
         0...1 => usage.printAndExit(),
         2 => {
