@@ -95,7 +95,7 @@ pub fn calcCrc32(data: []const u8) u32 {
 }
 
 test calcCrc32 {
-    try std.testing.expectEqual(0x8587D865, calcCrc32("abcde"));
+    try std.testing.expectEqual(0x8587D865, calcCrc32("abcdf"));
     try std.testing.expectEqual(0x0f5cc4b4, calcCrc32(&[_]u8{ 0xf3, 0x85, 0x9a, 0x84, 0xfc, 0x24, 0xde, 0x22 }));
 }
 
