@@ -8,8 +8,7 @@ pub fn printf(comptime fmt: []const u8, args: anytype) void {
     if (quiet) {
         return;
     }
-    var buf: [1024]u8 = undefined;
-    var stdout_writer = std.fs.File.stdout().writer(&buf);
+    var stdout_writer = std.fs.File.stdout().writer(&.{});
     var stdout = &stdout_writer.interface;
     stdout.print(fmt, args) catch return;
     stdout.flush() catch unreachable;
@@ -29,8 +28,7 @@ pub fn printError(comptime fmt: []const u8, args: anytype) void {
     if (quiet) {
         return;
     }
-    var stderr_buf: [1024]u8 = undefined;
-    var stderr_writer = std.fs.File.stderr().writer(&stderr_buf);
+    var stderr_writer = std.fs.File.stderr().writer(&.{});
     var stderr = &stderr_writer.interface;
     stderr.print("\x1b[G\x1b[K\x1b[1;31mERROR:\x1b[0m " ++ fmt ++ "\n", args) catch unreachable;
     stderr.flush() catch unreachable;

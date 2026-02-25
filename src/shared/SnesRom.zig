@@ -304,12 +304,12 @@ pub inline fn getInternalRomSizeKilobytes(self: *SnesRom) u32 {
 pub inline fn getInternalRamSizeKilobytes(self: *SnesRom) u32 {
     return @as(u32, 1) << @as(u5, @intCast(self.header.size_ram));
 }
-pub inline fn getInternalRomSizeMegabits(self: *SnesRom) u32 {
-    return (self.getInternalRomSizeKilobytes() * 8) / 1024;
+pub inline fn getInternalRomSizeMegabits(self: *SnesRom) f32 {
+    return (@as(f32, @floatFromInt(self.getInternalRomSizeKilobytes())) * 8) / 1024;
 }
 pub inline fn getInternalRamSizeKilobits(self: *SnesRom) u32 {
     return self.getInternalRamSizeKilobytes() * 8;
 }
-pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) usize {
-    return (((self.bin.len * 8) / 1024) / 1024);
+pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) f32 {
+    return (((@as(f32, @floatFromInt(self.bin.len)) * 8) / 1024) / 1024);
 }
