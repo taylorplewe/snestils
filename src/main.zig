@@ -50,7 +50,7 @@ const utils = [_]Util{
     help_util,
 };
 
-pub fn main() void { // test
+pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
 
