@@ -31,7 +31,7 @@ jobs:
           tar -xzf term*
           cd zig-out/bin
           ../../termshot ./snestils
-      - name: 'Commit out.png to repo'
+      - name: 'Commit snestils.png to repo'
         run: |
           mv zig-out/bin/out.png snestils.png
           git config user.name "github-actions[bot]"
