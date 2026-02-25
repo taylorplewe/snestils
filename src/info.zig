@@ -35,6 +35,7 @@ const usage: Usage = .{
             .items = &.{
                 .{ .shorthand = "", .title = "--no-hashes", .arg = "", .description = "do not calculate & show hashes for ROM" },
                 .{ .shorthand = "", .title = "--no-hexdump", .arg = "", .description = "do not show hexdump of ROM header" },
+                .{ .shorthand = "", .title = "--upper-hex", .arg = "", .description = "display uppercase hex values in hexdump" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "display this help text and quit" },
             },
         },
@@ -52,11 +53,13 @@ const Args = struct {
     rom_path: []const u8,
     no_hashes: bool,
     no_hexdump: bool,
+    upper_hex: bool,
 };
 var args: Args = .{
     .rom_path = "",
     .no_hashes = false,
     .no_hexdump = false,
+    .upper_hex = false,
 };
 fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsError!void {
     if (args_raw.len < 1) {
@@ -67,6 +70,8 @@ fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsErro
             args.no_hashes = true;
         } else if (std.mem.eql(u8, arg, "--no-hexdump")) {
             args.no_hexdump = true;
+        } else if (std.mem.eql(u8, arg, "--upper-hex")) {
+            args.upper_hex = true;
         } else {
             if (args.rom_path.len == 0) {
                 args.rom_path = arg;
@@ -162,11 +167,19 @@ fn displayHexdump(addr: u24, data: []const u8) void {
     var i: usize = 0;
     while (i < data.len) : (i += 16) {
         disp.printf(" \x1b[48;2;32;32;32m\x1b[38;2;190;190;190m", .{});
-        disp.printf(" {x:0>8} ", .{addr + i});
+        if (args.upper_hex) {
+            disp.printf(" {X:0>8} ", .{addr + i});
+        } else {
+            disp.printf(" {x:0>8} ", .{addr + i});
+        }
         disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
         for (0..4) |group| {
             for (0..4) |j| {
-                disp.printf("{x:0>2} ", .{data[i + (group * 4 + j)]});
+                if (args.upper_hex) {
+                    disp.printf("{X:0>2} ", .{data[i + (group * 4 + j)]});
+                } else {
+                    disp.printf("{x:0>2} ", .{data[i + (group * 4 + j)]});
+                }
             }
             if (group < 3) {
                 disp.printf(" ", .{});
