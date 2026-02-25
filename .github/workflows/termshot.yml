@@ -22,11 +22,13 @@ jobs:
           version: 0.15.2
       - run: zig build
       - name: 'Download termshot and create image'
+        shell: bash
+        env:
+          COLUMNS: 120
         run: |
           wget https://tplewe.com/files/termshot.tar.gz # I've checked out a fork that fixes an issue with termshot on CI, built it and am just hosting it on my server. Fork: https://github.com/myaaaaaaaaa/termshot/tree/stdin
           tar -xzf term*
           cp zig-out/bin/snestils .
-          export COLUMNS=120
           ./termshot -C 108 -c ./snestils
       - name: 'Commit snestils.png to repo'
         run: |
