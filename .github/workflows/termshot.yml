@@ -26,8 +26,7 @@ jobs:
           wget https://tplewe.com/files/termshot.tar.gz # I've checked out a fork that fixes an issue with termshot on CI, built it and am just hosting it on my server. Fork: https://github.com/myaaaaaaaaa/termshot/tree/stdin
           tar -xzf term*
           cp zig-out/bin/snestils .
-          ./snestils
-          ./termshot -c ./snestils
+          ./termshot -C 108 -c ./snestils
       - name: 'Commit snestils.png to repo'
         run: |
           mv out.png snestils.png
