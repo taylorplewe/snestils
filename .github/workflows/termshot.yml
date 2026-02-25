@@ -21,19 +21,15 @@ jobs:
         with:
           version: 0.15.2
       - run: zig build
-    
-      - if: runner.arch == 'ARM64'
-        run: wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_arm64.tar.gz
-      - if: runner.arch == 'X64'
-        run: wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz
-      - name: 'Take screenshot'
+      - name: 'Download termshot and create image'
         run: |
+          wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz # ubuntu-latest is always x64: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
           tar -xzf term*
-          cd zig-out/bin
-          ../../termshot ./snestils
+          cp zig-out/bin/snestils .
+          ./termshot -c ./snestils
       - name: 'Commit snestils.png to repo'
         run: |
-          mv zig-out/bin/out.png snestils.png
+          mv out.png snestils.png
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add snestils.png
