@@ -48,7 +48,7 @@ const utils = [_]Util{
     join_util,
     remove_header_util,
     help_util,
-};
+}; // test
 
 pub fn main() void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
