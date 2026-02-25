@@ -23,7 +23,7 @@ jobs:
       - run: zig build
       - name: 'Download termshot and create image'
         run: |
-          wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz # ubuntu-latest is always x64: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
+          wget https://tplewe.com/files/termshot.tar.gz # I've checked out a fork that fixes an issue with termshot on CI, built it and am just hosting it on my server. Fork: https://github.com/myaaaaaaaaa/termshot/tree/stdin
           tar -xzf term*
           cp zig-out/bin/snestils .
           ./snestils
