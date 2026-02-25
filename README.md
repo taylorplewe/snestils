@@ -1,5 +1,5 @@
 # snestils
-<img width="3091" height="1059" alt="out" src="https://github.com/user-attachments/assets/7665ef1d-545a-4d71-988d-44c436ddf54d" />
+![snestils screenshot](snestils.png)
 
 [![Build and Release CI results](https://github.com/taylorplewe/snestils/actions/workflows/build_and_release.yml/badge.svg)](https://github.com/taylorplewe/snestils/actions/workflows/build_and_release.yml)
 
