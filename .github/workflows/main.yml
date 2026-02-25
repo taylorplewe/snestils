@@ -1,0 +1,41 @@
+name: Update terminal screenshots
+
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'src/main.zig'
+
+jobs:
+  build-and-update-screenshot:
+    name: Build latest main, download termshot and take screenshot
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+      - run: zig build
+    
+      - if: runner.arch == 'ARM64'
+        run: wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_arm64.tar.gz
+      - if: runner.arch == 'X64'
+        run: wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz
+      - name: 'Take screenshot'
+        run: |
+          tar -xcf term*
+          cd zig-out/bin
+          ../../termshot ./snestils
+      - name: 'Commit out.png to repo'
+        run: |
+          cd ../..
+          mv zig-out/bin/out.png snestils.png
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add snestils.png
+          git commit -m "[action] update snestils.png"
+          git push
+          
