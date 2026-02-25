@@ -89,7 +89,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
 
     disp.println("");
 
-    displayHexdump(rom.header_addr - 16, rom_bin[rom.header_addr - 16 .. rom.header_addr + 32]);
+    if (!args.no_hexdump) displayHexdump(rom.header_addr - 16, rom_bin[rom.header_addr - 16 .. rom.header_addr + 32]);
 
     const map_mode: SnesRom.SnesRomHeader.MapMode = @enumFromInt(rom.header.mode & 0x0f);
     displayInfoRow("Title", .String, &rom.header.title);
@@ -161,9 +161,9 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
 fn displayHexdump(addr: u24, data: []const u8) void {
     var i: usize = 0;
     while (i < data.len) : (i += 16) {
-        disp.printf("\x1b[48;2;64;64;64m", .{});
-        disp.printf("{x:0>8} ", .{addr + i});
-        disp.printf("\x1b[48;2;32;32;32m ", .{});
+        disp.printf(" \x1b[48;2;32;32;32m\x1b[38;2;190;190;190m", .{});
+        disp.printf(" {x:0>8} ", .{addr + i});
+        disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
         for (0..4) |group| {
             for (0..4) |j| {
                 disp.printf("{x:0>2} ", .{data[i + (group * 4 + j)]});
@@ -172,14 +172,15 @@ fn displayHexdump(addr: u24, data: []const u8) void {
                 disp.printf(" ", .{});
             }
         }
-        disp.printf("\x1b[48;2;64;64;64m", .{});
-        disp.printf(" {s: >16}", .{data[i .. i + 16]});
-        disp.println("");
-
-        // disp.printf("\x1b[90m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m", .{ "Hexdump", current_addr });
-        // for (data[i..][0..16]) |byte| {
-        //     disp.printf("{x}", .{byte});
-        // }
-        // disp.println("\x1b[0m");
+        disp.printf("\x1b[48;2;32;32;32m\x1b[38;2;190;190;190m ", .{});
+        for (i..i + 16) |c| {
+            if (std.ascii.isPrint(data[c])) {
+                disp.printf("{c}", .{data[c]});
+            } else {
+                disp.printf(" ", .{});
+            }
+        }
+        disp.println(" \x1b[0m");
     }
+    disp.println("");
 }
