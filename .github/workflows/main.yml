@@ -1,5 +1,7 @@
 name: Update terminal screenshots
 
+run-name: Update terminal screenshots
+
 on:
   push:
     branches:
@@ -26,7 +28,7 @@ jobs:
         run: wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz
       - name: 'Take screenshot'
         run: |
-          tar -xcf term*
+          tar -xzf term*
           cd zig-out/bin
           ../../termshot ./snestils
       - name: 'Commit out.png to repo'
