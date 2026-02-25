@@ -166,13 +166,16 @@ fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) 
 fn displayHexdump(addr: u24, data: []const u8) void {
     var i: usize = 0;
     while (i < data.len) : (i += 16) {
-        disp.printf(" \x1b[48;2;32;32;32m\x1b[38;2;190;190;190m", .{});
+        // disp.printf(" \x1b[48;2;32;32;32m\x1b[38;2;190;190;190m", .{}); // fancy bg colors
+        disp.printf("  \x1b[90m", .{});
         if (args.upper_hex) {
             disp.printf(" {X:0>8} ", .{addr + i});
         } else {
             disp.printf(" {x:0>8} ", .{addr + i});
         }
-        disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
+        disp.printf("│ \x1b[38;2;255;255;255m", .{});
+
+        // disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
         for (0..4) |group| {
             for (0..4) |j| {
                 if (args.upper_hex) {
@@ -185,7 +188,8 @@ fn displayHexdump(addr: u24, data: []const u8) void {
                 disp.printf(" ", .{});
             }
         }
-        disp.printf("\x1b[48;2;32;32;32m\x1b[38;2;190;190;190m ", .{});
+        // disp.printf("\x1b[48;2;32;32;32m\x1b[38;2;190;190;190m ", .{});
+        disp.printf("│ ", .{});
         for (i..i + 16) |c| {
             if (std.ascii.isPrint(data[c])) {
                 disp.printf("{c}", .{data[c]});
