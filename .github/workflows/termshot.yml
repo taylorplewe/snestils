@@ -26,6 +26,7 @@ jobs:
           wget https://github.com/homeport/termshot/releases/download/v0.6.1/termshot_0.6.1_linux_amd64.tar.gz # ubuntu-latest is always x64: https://github.com/actions/runner-images?tab=readme-ov-file#available-images
           tar -xzf term*
           cp zig-out/bin/snestils .
+          ./snestils
           ./termshot -c ./snestils
       - name: 'Commit snestils.png to repo'
         run: |
