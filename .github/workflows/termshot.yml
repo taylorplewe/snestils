@@ -33,11 +33,5 @@ jobs:
           ../../termshot ./snestils
       - name: 'Commit out.png to repo'
         run: |
-          cd ../..
-          mv zig-out/bin/out.png snestils.png
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add snestils.png
-          git commit -m "[action] update snestils.png"
-          git push
+          pwd
           
