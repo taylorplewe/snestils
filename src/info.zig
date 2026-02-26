@@ -14,6 +14,9 @@ const Util = @import("Util.zig");
 
 const KEY_WIDTH = 20;
 const KEY_WIDTH_FMT = std.fmt.comptimePrint("{d}", .{KEY_WIDTH});
+const DIM = "\x1b[90;22m";
+const WHITE = "\x1b[97;22m";
+const BRIGHT = "\x1b[97;1m";
 
 const FormatSpecifier = enum {
     String,
@@ -105,7 +108,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
         displayInfoRow("Game code", .String, rom.extended_header.?.game_code);
     }
     displayInfoRow("ROM size", .RomSize, rom.getPhysicalRomSizeMegabits());
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: \x1b[1m{d}\x1b[0m Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: " ++ BRIGHT ++ "{d}" ++ WHITE ++ " Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
     displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
@@ -117,11 +120,11 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
     const OK = "\x1b[32;1mOK\x1b[0m";
     const BAD = "\x1b[31;1mBAD\x1b[0m";
     displayInfoRow("Checksum", .String, if (checksum_calculated == rom.header.checksum) OK else BAD);
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_calculated});
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: " ++ WHITE ++ "0x" ++ BRIGHT ++ "{x:0>4}\x1b[0m\n", .{checksum_calculated});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   " ++ WHITE ++ "0x" ++ BRIGHT ++ "{x:0>4}\x1b[0m\n", .{rom.header.checksum});
     displayInfoRow("Checksum complement", .String, if (checksum_compl_calculated == rom.header.checksum_complement) OK else BAD);
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   \x1b[0m0x\x1b[1m{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Calculated: " ++ WHITE ++ "0x" ++ BRIGHT ++ "{x:0>4}\x1b[0m\n", .{checksum_compl_calculated});
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal:   " ++ WHITE ++ "0x" ++ BRIGHT ++ "{x:0>4}\x1b[0m\n", .{rom.header.checksum_complement});
     displayInfoRow("Has copier header", .String, if (rom.hasCopierHeader()) "Yes" else "No");
 
     if (args.no_hashes) {
@@ -152,14 +155,14 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
 }
 
 fn displayInfoRow(key: []const u8, comptime T: FormatSpecifier, value: anytype) void {
-    const BEFORE_SPECIFIER = "\x1b[90m{s:>" ++ KEY_WIDTH_FMT ++ "} \x1b[0;1m";
+    const BEFORE_SPECIFIER = DIM ++ "{s:>" ++ KEY_WIDTH_FMT ++ "} " ++ BRIGHT;
     const AFTER_SPECIFIER = "\x1b[0m\n";
     switch (T) {
         .String => disp.printf(BEFORE_SPECIFIER ++ "{s}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .HexNumber => disp.printf(BEFORE_SPECIFIER ++ "\x1b[0m0x\x1b[1m{x}" ++ AFTER_SPECIFIER, .{ key, value }),
+        .HexNumber => disp.printf(BEFORE_SPECIFIER ++ WHITE ++ "0x" ++ BRIGHT ++ "{x}" ++ AFTER_SPECIFIER, .{ key, value }),
         .VersionNumber => disp.printf(BEFORE_SPECIFIER ++ "1.{d}" ++ AFTER_SPECIFIER, .{ key, value }),
-        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
-        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}\x1b[0m Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
+        .RomSize => disp.printf(BEFORE_SPECIFIER ++ "{d}" ++ WHITE ++ " Mb ({d} MB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
+        .RamSize => disp.printf(BEFORE_SPECIFIER ++ "{d}" ++ WHITE ++ " Kb ({d} KB)" ++ AFTER_SPECIFIER, .{ key, value, value / 8 }),
     }
 }
 
@@ -167,14 +170,14 @@ fn displayHexdump(addr: u24, data: []const u8) void {
     var i: usize = 0;
     while (i < data.len) : (i += 16) {
         // disp.printf(" \x1b[48;2;32;32;32m\x1b[38;2;190;190;190m", .{}); // fancy bg colors
-        disp.printf("  \x1b[90m", .{});
+        disp.printf(" " ++ DIM, .{});
         if (args.upper_hex) {
-            disp.printf(" {X:0>8} ", .{addr + i});
+            disp.printf("{X:0>8} ", .{addr + i});
         } else {
-            disp.printf(" {x:0>8} ", .{addr + i});
+            disp.printf("{x:0>8} ", .{addr + i});
         }
         // disp.printf("\x1b[38;2;255;255;255m", .{});
-        disp.printf("\x1b[0m", .{});
+        disp.printf(WHITE, .{});
 
         // disp.printf("\x1b[48;2;16;16;16m\x1b[38;2;255;255;255m ", .{});
         for (0..4) |group| {
@@ -190,7 +193,7 @@ fn displayHexdump(addr: u24, data: []const u8) void {
             }
         }
         // disp.printf("\x1b[48;2;32;32;32m\x1b[38;2;190;190;190m ", .{});
-        disp.printf("\x1b[90m", .{});
+        disp.printf(DIM, .{});
         for (i..i + 16) |c| {
             if (std.ascii.isPrint(data[c])) {
                 disp.printf("{c}", .{data[c]});
