@@ -115,9 +115,9 @@ const usage = Usage{
             .title = "Utils",
             .items = &.{
                 .{ .shorthand = "", .title = "info", .arg = "", .description = "print out information about a ROM" },
+                .{ .shorthand = "", .title = "patch", .arg = "", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
                 .{ .shorthand = "", .title = "fix-checksum", .arg = "", .description = "fix a ROM's checksum and complment" },
                 .{ .shorthand = "", .title = "split", .arg = "", .description = "split a ROM file into multiple smaller files" },
-                .{ .shorthand = "", .title = "patch", .arg = "", .description = "apply an IPS, UPS or BPS patch file to a ROM" },
                 .{ .shorthand = "", .title = "join", .arg = "", .description = "join split binary chunks into a single ROM file" },
                 .{ .shorthand = "", .title = "remove-header", .arg = "", .description = "remove a ROM's 512-byte copier device header" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
