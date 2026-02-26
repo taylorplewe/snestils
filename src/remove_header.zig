@@ -130,4 +130,34 @@ fn removeHeader(allocator: *const std.mem.Allocator) void {
     disp.println("\x1b[32mheaderless data written to ROM file.\x1b[0m");
 }
 
-test removeHeader {}
+test removeHeader {
+    // arrange
+    const allocator = std.testing.allocator;
+    var tmp_dir = std.testing.tmpDir(.{});
+    try std.fs.cwd().copyFile("src/shared/testmatter/sutah_with_copier_header.sfc", tmp_dir.dir, "sutah.headered.sfc", .{});
+    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.headered.sfc" });
+    const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.noheader.sfc" });
+    args = .{
+        .rom_path = rom_path,
+        .out_path = out_path,
+        .overwrite = false,
+    };
+    defer {
+        tmp_dir.cleanup();
+        allocator.free(tmp_path);
+        allocator.free(rom_path);
+        allocator.free(out_path);
+    }
+
+    // act
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    removeHeader(&arena.allocator());
+    arena.deinit();
+
+    // assert
+    try tmp_dir.dir.access("sutah.noheader.sfc", .{});
+    const file = try tmp_dir.dir.openFile("sutah.noheader.sfc", .{ .mode = .read_only });
+    defer file.close();
+    try std.testing.expectEqual(try file.getEndPos(), 128 * 1024);
+}
