@@ -106,7 +106,7 @@ fn displayInfo(allocator: *const std.mem.Allocator) void {
         displayInfoRow("Game code", .String, rom.extended_header.?.game_code);
     }
     displayInfoRow("ROM size", .RomSize, rom.getPhysicalRomSizeMegabits());
-    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: " ++ ansi.BRIGHT ++ "{d}" ++ ansi.WHITE ++ " Mb ({d} MB)\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
+    disp.printf((" " ** (KEY_WIDTH + 1)) ++ "Internal: " ++ ansi.BRIGHT ++ "{d}" ++ ansi.WHITE ++ " Mb ({d} MB)\x1b[0m\n", .{ rom.getInternalRomSizeMegabits(), rom.getInternalRomSizeMegabits() / 8 });
     displayInfoRow("RAM size", .RamSize, rom.getInternalRamSizeKilobits());
     displayInfoRow("Mapping", .String, map_mode.getDisplayText());
     displayInfoRow("Speed", .String, rom.header.getSpeedString());
