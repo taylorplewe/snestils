@@ -2,8 +2,9 @@
 // See `main.zig` for full usage and warranty notice
 
 const std = @import("std");
+const builtin = @import("builtin");
 
-pub var quiet: bool = false;
+pub var quiet: bool = builtin.is_test;
 pub fn printf(comptime fmt: []const u8, args: anytype) void {
     if (quiet) {
         return;

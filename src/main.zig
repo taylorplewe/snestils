@@ -125,3 +125,7 @@ const usage = Usage{
         },
     },
 };
+
+test {
+    std.testing.refAllDecls(@This());
+}

@@ -146,3 +146,31 @@ fn split(allocator: *const std.mem.Allocator) void {
     disp.clearLine();
     disp.println("\x1b[32msplit ROM files written to same directory as given ROM file.\x1b[0m");
 }
+
+test split {
+    // arrange
+    const allocator = std.testing.allocator;
+    var tmp_dir = std.testing.tmpDir(.{});
+    try std.fs.cwd().copyFile("src/shared/testmatter/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
+    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const rom_path = try std.fmt.allocPrint(allocator, "{s}/sutah.sfc", .{tmp_path});
+    args = .{
+        .rom_path = rom_path,
+        .size = 32,
+    };
+    defer {
+        tmp_dir.cleanup();
+        allocator.free(tmp_path);
+        allocator.free(rom_path);
+    }
+
+    // act
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    split(&arena.allocator());
+    arena.deinit();
+
+    // assert
+    try tmp_dir.dir.access("sutah.split_00.sfc", .{});
+    const file = try tmp_dir.dir.openFile("sutah.split_00.sfc", .{ .mode = .read_only });
+    try std.testing.expectEqual(try file.getEndPos(), 32 * 1024);
+}
