@@ -129,3 +129,5 @@ fn removeHeader(allocator: *const std.mem.Allocator) void {
     disp.clearLine();
     disp.println("\x1b[32mheaderless data written to ROM file.\x1b[0m");
 }
+
+test removeHeader {}
