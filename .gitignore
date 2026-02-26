@@ -1,8 +1,4 @@
 .zig-cache
 zig-out
-*.sfc*
-*.ips*
-*.ups*
 
-
-testmat
+testmat/
