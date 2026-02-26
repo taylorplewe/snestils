@@ -1,6 +1,6 @@
-name: Test
+name: Tests
 
-run-name: Test
+run-name: Tests
 
 on:
   push:
