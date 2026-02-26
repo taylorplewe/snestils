@@ -132,6 +132,8 @@ fn removeHeader(allocator: *const std.mem.Allocator) void {
 
 test removeHeader {
     // arrange
+    const headerless_rom_bin = @embedFile("shared/testmatter/sutah.sfc");
+    const headerless_rom_crc32 = std.hash.Crc32.hash(headerless_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
     try std.fs.cwd().copyFile("src/shared/testmatter/sutah_with_copier_header.sfc", tmp_dir.dir, "sutah.headered.sfc", .{});
@@ -156,8 +158,14 @@ test removeHeader {
     arena.deinit();
 
     // assert
-    try tmp_dir.dir.access("sutah.noheader.sfc", .{});
-    const file = try tmp_dir.dir.openFile("sutah.noheader.sfc", .{ .mode = .read_only });
-    defer file.close();
-    try std.testing.expectEqual(try file.getEndPos(), 128 * 1024);
+    const new_rom_file = try tmp_dir.dir.openFile("sutah.noheader.sfc", .{ .mode = .read_only });
+    defer new_rom_file.close();
+    try std.testing.expectEqual(try new_rom_file.getEndPos(), 128 * 1024);
+    var new_rom_reader_buf: [1024]u8 = undefined;
+    var new_rom_file_reader = new_rom_file.reader(&new_rom_reader_buf);
+    var new_rom_reader = &new_rom_file_reader.interface;
+    const new_rom_bin = try new_rom_reader.allocRemaining(allocator, .unlimited);
+    defer allocator.free(new_rom_bin);
+    const new_rom_crc32 = std.hash.Crc32.hash(new_rom_bin);
+    try std.testing.expectEqual(headerless_rom_crc32, new_rom_crc32);
 }
