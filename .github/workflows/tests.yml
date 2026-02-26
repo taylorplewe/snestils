@@ -18,4 +18,6 @@ jobs:
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.15.2
-      - run: zig test src/tests.zig
+      - run: |
+          zig build test                # main exe module with all the utils
+          zig test src/shared/tests.zig # shared library, including the SnesRom struct
