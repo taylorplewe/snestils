@@ -320,3 +320,13 @@ test getCalculatedChecksum {
     var rom = try fromBin(@constCast(sutah_bin));
     try std.testing.expectEqual(rom.getCalculatedChecksum(), 0xb554);
 }
+test hasCopierHeader {
+    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    var sutah_rom = try fromBin(@constCast(sutah_bin));
+
+    const sutah_headered_bin = @embedFile("testmatter/sutah_with_copier_header.sfc");
+    var sutah_headered_rom = try fromBin(@constCast(sutah_headered_bin));
+
+    try std.testing.expectEqual(sutah_rom.hasCopierHeader(), false);
+    try std.testing.expectEqual(sutah_headered_rom.hasCopierHeader(), true);
+}
