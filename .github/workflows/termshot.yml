@@ -3,11 +3,13 @@ name: Update terminal screenshots
 run-name: Update terminal screenshots
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'main'
     paths:
       - 'src/main.zig'
+      - 'src/Usage.zig'
 
 jobs:
   build-and-update-screenshot:
