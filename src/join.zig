@@ -116,3 +116,45 @@ fn join(allocator: *const std.mem.Allocator) void {
     disp.clearLine();
     disp.printf("\x1b[32mjoined file written to \x1b[0;1m{s}\x1b[0;32m\n", .{args.out_path});
 }
+
+test join {
+    // arrange
+    const allocator = std.testing.allocator;
+    var tmp_dir = std.testing.tmpDir(.{});
+    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    var in_paths: std.ArrayList([:0]const u8) = .empty;
+    inline for ([_][]const u8{
+        "sutah.split_00.sfc",
+        "sutah.split_01.sfc",
+        "sutah.split_02.sfc",
+        "sutah.split_03.sfc",
+    }) |path| {
+        try std.fs.cwd().copyFile("src/shared/testmatter/" ++ path, tmp_dir.dir, path, .{});
+        try in_paths.append(allocator, try std.fs.path.joinZ(allocator, &.{ tmp_path, path }));
+    }
+    const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.joined.sfc" });
+    args = .{
+        .in_paths = try in_paths.toOwnedSlice(allocator),
+        .out_path = out_path,
+    };
+    defer {
+        tmp_dir.cleanup();
+        allocator.free(tmp_path);
+        for (args.in_paths) |path| {
+            allocator.free(path);
+        }
+        allocator.free(args.in_paths);
+        allocator.free(args.out_path);
+    }
+
+    // act
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    join(&arena.allocator());
+    arena.deinit();
+
+    // assert
+    try tmp_dir.dir.access("sutah.joined.sfc", .{});
+    const file = try tmp_dir.dir.openFile("sutah.joined.sfc", .{ .mode = .read_only });
+    defer file.close();
+    try std.testing.expectEqual(try file.getEndPos(), 128 * 1024);
+}

@@ -153,7 +153,7 @@ test split {
     var tmp_dir = std.testing.tmpDir(.{});
     try std.fs.cwd().copyFile("src/shared/testmatter/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
     const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
-    const rom_path = try std.fmt.allocPrint(allocator, "{s}/sutah.sfc", .{tmp_path});
+    const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     args = .{
         .rom_path = rom_path,
         .size = 32,
@@ -170,7 +170,15 @@ test split {
     arena.deinit();
 
     // assert
-    try tmp_dir.dir.access("sutah.split_00.sfc", .{});
+    for ([_][]const u8{
+        "sutah.split_00.sfc",
+        "sutah.split_01.sfc",
+        "sutah.split_02.sfc",
+        "sutah.split_03.sfc",
+    }) |path| {
+        try tmp_dir.dir.access(path, .{});
+    }
     const file = try tmp_dir.dir.openFile("sutah.split_00.sfc", .{ .mode = .read_only });
+    defer file.close();
     try std.testing.expectEqual(try file.getEndPos(), 32 * 1024);
 }
