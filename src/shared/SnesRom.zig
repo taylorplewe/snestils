@@ -3,6 +3,7 @@
 
 const std = @import("std");
 
+const ansi = @import("ansi.zig");
 const developer_ids: []const []const u8 = @import("developer_ids.zon");
 
 const SnesRom = @This();
@@ -72,9 +73,9 @@ pub const SnesRomHeader = extern struct {
     }
     pub inline fn getSpeedString(self: *SnesRomHeader) []const u8 {
         return if (self.mode & 0b0001_0000 != 0)
-            "FastROM\x1b[0m (120ns)"
+            "FastROM" ++ ansi.WHITE ++ " (120ns)"
         else
-            "SlowROM\x1b[0m (200ns)";
+            "SlowROM" ++ ansi.WHITE ++ " (200ns)";
     }
 
     /// See https://problemkaputt.de/fullsnes.htm#snescartridgeromheader under "ROM Speed and Map Mode (FFD5h)"
