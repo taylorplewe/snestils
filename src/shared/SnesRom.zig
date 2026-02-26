@@ -67,6 +67,7 @@ pub const SnesRomHeader = extern struct {
         if (possible_header.mode & 0b11100000 != 0b00100000) return false;
         _ = std.enums.fromInt(MapMode, possible_header.mode & 0x0f) orelse return false;
 
+        // many demo/beta ROMs just zero out both checksum and complement
         // if (possible_header.checksum ^ possible_header.checksum_complement != 0xffff) return false;
 
         return true;
@@ -89,12 +90,9 @@ pub const SnesRomHeader = extern struct {
 
         pub fn getDisplayText(self: *const MapMode) []const u8 {
             return switch (self.*) {
-                .LoROM => "LoROM",
-                .HiROM => "HiROM",
-                .LoROMSDD1 => "LoROM",
-                .LoROMSA1 => "LoROM",
+                .LoROM, .LoROMSDD1, .LoROMSA1 => "LoROM",
+                .HiROM, .HiROMSPC7110 => "HiROM",
                 .ExHiROM => "ExHiROM",
-                .HiROMSPC7110 => "HiROM",
             };
         }
     };
@@ -315,6 +313,15 @@ pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) f32 {
     return (((@as(f32, @floatFromInt(self.bin.len)) * 8) / 1024) / 1024);
 }
 
+test SnesRomHeader {
+    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    const rom = try fromBin(@constCast(sutah_bin));
+    try std.testing.expectEqualStrings(&rom.header.title, "SONIC SOUTHERN UTAH  ");
+    try std.testing.expectEqual(rom.header.checksum, 0x5555);
+    try std.testing.expectEqual(rom.header.checksum_complement, 0xaaaa);
+    try std.testing.expectEqual(rom.header.mode & 0x0f, @intFromEnum(SnesRomHeader.MapMode.LoROM));
+    try std.testing.expectEqual(rom.header.chipset, SnesRomHeader.Chipset.Rom);
+}
 test getCalculatedChecksum {
     const sutah_bin = @embedFile("testmatter/sutah.sfc");
     var rom = try fromBin(@constCast(sutah_bin));
