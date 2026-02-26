@@ -314,3 +314,9 @@ pub inline fn getInternalRamSizeKilobits(self: *SnesRom) u32 {
 pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) f32 {
     return (((@as(f32, @floatFromInt(self.bin.len)) * 8) / 1024) / 1024);
 }
+
+test getCalculatedChecksum {
+    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    var rom = try fromBin(@constCast(sutah_bin));
+    try std.testing.expectEqual(rom.getCalculatedChecksum(), 0xb554);
+}
