@@ -119,7 +119,7 @@ fn join(allocator: *const std.mem.Allocator) void {
 
 test join {
     // arrange
-    const joined_rom_bin = @embedFile("shared/testmatter/sutah.sfc");
+    const joined_rom_bin = @embedFile("shared/testing/sutah.sfc");
     const joined_rom_crc32 = std.hash.Crc32.hash(joined_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
@@ -131,7 +131,7 @@ test join {
         "sutah.split_02.sfc",
         "sutah.split_03.sfc",
     }) |path| {
-        try std.fs.cwd().copyFile("src/shared/testmatter/" ++ path, tmp_dir.dir, path, .{});
+        try std.fs.cwd().copyFile("src/shared/testing/" ++ path, tmp_dir.dir, path, .{});
         try in_paths.append(allocator, try std.fs.path.joinZ(allocator, &.{ tmp_path, path }));
     }
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.joined.sfc" });
@@ -155,14 +155,7 @@ test join {
     arena.deinit();
 
     // assert
-    try tmp_dir.dir.access("sutah.joined.sfc", .{});
-    const new_rom_file = try tmp_dir.dir.openFile("sutah.joined.sfc", .{ .mode = .read_only });
-    defer new_rom_file.close();
-    try std.testing.expectEqual(try new_rom_file.getEndPos(), 128 * 1024);
-    var new_rom_reader_buf: [1024]u8 = undefined;
-    var new_rom_file_reader = new_rom_file.reader(&new_rom_reader_buf);
-    var new_rom_reader = &new_rom_file_reader.interface;
-    const new_rom_bin = try new_rom_reader.allocRemaining(allocator, .unlimited);
+    const new_rom_bin = try shared.testing.getBinFromFilePath(&allocator, &tmp_dir.dir, "sutah.joined.sfc");
     defer allocator.free(new_rom_bin);
     const new_rom_crc32 = std.hash.Crc32.hash(new_rom_bin);
     try std.testing.expectEqual(joined_rom_crc32, new_rom_crc32);

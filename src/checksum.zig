@@ -139,7 +139,7 @@ test fixChecksum {
     // arrange
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
-    try std.fs.cwd().copyFile("src/shared/testmatter/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
+    try std.fs.cwd().copyFile("src/shared/testing/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
     const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.goodchecksum.sfc" });
@@ -161,13 +161,7 @@ test fixChecksum {
     arena.deinit();
 
     // assert
-    const new_rom_file = try tmp_dir.dir.openFile("sutah.goodchecksum.sfc", .{ .mode = .read_only });
-    defer new_rom_file.close();
-    try std.testing.expectEqual(try new_rom_file.getEndPos(), 128 * 1024);
-    var new_rom_reader_buf: [1024]u8 = undefined;
-    var new_rom_file_reader = new_rom_file.reader(&new_rom_reader_buf);
-    var new_rom_reader = &new_rom_file_reader.interface;
-    const new_rom_bin = try new_rom_reader.allocRemaining(allocator, .unlimited);
+    const new_rom_bin = try shared.testing.getBinFromFilePath(&allocator, &tmp_dir.dir, "sutah.goodchecksum.sfc");
     defer allocator.free(new_rom_bin);
     var new_rom = try shared.SnesRom.fromBin(new_rom_bin);
     const good_checksum = new_rom.getCalculatedChecksum();

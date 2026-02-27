@@ -314,7 +314,7 @@ pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) f32 {
 }
 
 test SnesRomHeader {
-    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    const sutah_bin = @embedFile("testing/sutah.sfc");
     const rom = try fromBin(@constCast(sutah_bin));
     try std.testing.expectEqualStrings(&rom.header.title, "SONIC SOUTHERN UTAH  ");
     try std.testing.expectEqual(rom.header.checksum, 0x5555);
@@ -323,15 +323,15 @@ test SnesRomHeader {
     try std.testing.expectEqual(rom.header.chipset, SnesRomHeader.Chipset.Rom);
 }
 test getCalculatedChecksum {
-    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    const sutah_bin = @embedFile("testing/sutah.sfc");
     var rom = try fromBin(@constCast(sutah_bin));
     try std.testing.expectEqual(rom.getCalculatedChecksum(), 0xb554);
 }
 test hasCopierHeader {
-    const sutah_bin = @embedFile("testmatter/sutah.sfc");
+    const sutah_bin = @embedFile("testing/sutah.sfc");
     var sutah_rom = try fromBin(@constCast(sutah_bin));
 
-    const sutah_headered_bin = @embedFile("testmatter/sutah_with_copier_header.sfc");
+    const sutah_headered_bin = @embedFile("testing/sutah_with_copier_header.sfc");
     var sutah_headered_rom = try fromBin(@constCast(sutah_headered_bin));
 
     try std.testing.expectEqual(sutah_rom.hasCopierHeader(), false);
