@@ -4,12 +4,14 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+pub var io: std.Io = undefined;
 pub var quiet: bool = builtin.is_test;
+
 pub fn printf(comptime fmt: []const u8, args: anytype) void {
     if (quiet) {
         return;
     }
-    var stdout_writer = std.fs.File.stdout().writer(&.{});
+    var stdout_writer = std.Io.File.stdout().writer(io, &.{});
     var stdout = &stdout_writer.interface;
     stdout.print(fmt, args) catch return;
     stdout.flush() catch unreachable;
@@ -29,7 +31,7 @@ pub fn printError(comptime fmt: []const u8, args: anytype) void {
     if (quiet) {
         return;
     }
-    var stderr_writer = std.fs.File.stderr().writer(&.{});
+    var stderr_writer = std.Io.File.stderr().writer(io, &.{});
     var stderr = &stderr_writer.interface;
     stderr.print("\x1b[G\x1b[K\x1b[1;31mERROR:\x1b[0m " ++ fmt ++ "\n", args) catch unreachable;
     stderr.flush() catch unreachable;

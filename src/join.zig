@@ -90,7 +90,7 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn join(allocator: *const std.mem.Allocator) void {
+fn join(io: std.Io, allocator: *const std.mem.Allocator) void {
     var joined_writer: std.Io.Writer.Allocating = .init(allocator.*);
     defer joined_writer.deinit();
 

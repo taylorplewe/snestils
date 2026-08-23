@@ -120,7 +120,7 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn patch(allocator: *const std.mem.Allocator) void {
+fn patch(io: std.Io, allocator: *const std.mem.Allocator) void {
     // patch file I/O
     const patch_path_ext = args.patch_path[((std.mem.lastIndexOfScalar(u8, args.patch_path, '.') orelse args.patch_path.len) + 1)..];
     const patch_file_format = std.meta.stringToEnum(PatchFormat, patch_path_ext) orelse fatalFmt("unsupported patch file extension \x1b[1m{s}\x1b[0m", .{patch_path_ext});

@@ -83,7 +83,7 @@ fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsErro
     }
 }
 
-fn displayInfo(allocator: *const std.mem.Allocator) void {
+fn displayInfo(io: std.Io, allocator: *const std.mem.Allocator) void {
     const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
 
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;

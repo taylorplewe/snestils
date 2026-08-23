@@ -20,10 +20,10 @@ pub const VTable = struct {
     /// Perform main action associated with this utility
     ///
     /// e.g. the `patch` utility patches a ROM file via its `do` implementation
-    do: *const fn (*const std.mem.Allocator) void,
+    do: *const fn (std.Io, *const std.mem.Allocator) void,
 };
 
-pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args_raw: [][:0]u8) void {
+pub fn do(self: *const Util, io: std.Io, allocator: *const std.mem.Allocator, args_raw: [][:0]u8) void {
     if (self.vtable.parseArgs != null) {
         for (args_raw) |arg| {
             if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
@@ -40,7 +40,7 @@ pub fn do(self: *const Util, allocator: *const std.mem.Allocator, args_raw: [][:
             self.usage.?.printAndExitWithError();
         };
     }
-    self.vtable.do(allocator);
+    self.vtable.do(io, allocator);
 }
 
 pub const ParseArgsError = error{

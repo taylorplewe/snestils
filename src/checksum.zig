@@ -95,7 +95,7 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn fixChecksum(allocator: *const std.mem.Allocator) void {
+fn fixChecksum(io: std.Io, allocator: *const std.mem.Allocator) void {
     const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
     defer rom_file.close();
 
