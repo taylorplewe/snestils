@@ -94,6 +94,7 @@ pub fn main(init: std.process.Init) void {
 fn printHelp(_: std.Io, _: *const std.mem.Allocator) void {
     usage.printAndExit();
 }
+
 const help_util: Util = .{
     .vtable = &.{
         .parseArgs = null,
