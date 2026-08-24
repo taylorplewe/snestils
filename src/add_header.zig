@@ -130,7 +130,7 @@ fn addHeader(io: std.Io, allocator: *const std.mem.Allocator) void {
     out_writer.flush() catch fatal("could not flush ROM writer");
 
     disp.clearLine();
-    disp.println("\x1b[32mheadered data written to ROM file.\x1b[0m");
+    disp.println("\x1b[32mempty copier header prepended to ROM file.\x1b[0m");
 }
 
 test addHeader {
