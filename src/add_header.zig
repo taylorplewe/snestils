@@ -135,20 +135,20 @@ fn addHeader(io: std.Io, allocator: *const std.mem.Allocator) void {
 
 test addHeader {
     // arrange
-    const headerless_rom_bin = @embedFile("shared/testing/sutah.sfc");
-    const headerless_rom_crc32 = std.hash.Crc32.hash(headerless_rom_bin);
+    const headered_rom_bin = @embedFile("shared/testing/sutah_with_copier_header.sfc");
+    const headered_rom_crc32 = std.hash.Crc32.hash(headered_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
     try std.Io.Dir.cwd().copyFile(
-        "src/shared/testing/sutah_with_copier_header.sfc",
+        "src/shared/testing/sutah.sfc",
         tmp_dir.dir,
-        "sutah.headered.sfc",
+        "sutah.noheader.sfc",
         std.testing.io,
         .{},
     );
     const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
-    const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.headered.sfc" });
-    const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.noheader.sfc" });
+    const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.noheader.sfc" });
+    const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.headered.sfc" });
     args = .{
         .rom_path = rom_path,
         .out_path = out_path,
@@ -171,9 +171,9 @@ test addHeader {
         std.testing.io,
         &allocator,
         &tmp_dir.dir,
-        "sutah.header.sfc",
+        "sutah.headered.sfc",
     );
     defer allocator.free(new_rom_bin);
     const new_rom_crc32 = std.hash.Crc32.hash(new_rom_bin);
-    try std.testing.expectEqual(headerless_rom_crc32, new_rom_crc32);
+    try std.testing.expectEqual(headered_rom_crc32, new_rom_crc32);
 }
