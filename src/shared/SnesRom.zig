@@ -244,8 +244,9 @@ pub fn fromBin(bin: []const u8) ParseError!SnesRom {
 
 pub inline fn getDeveloperName(self: *SnesRom) ?[]const u8 {
     var table_index: usize = 0;
+    const dev_id_usize: usize = self.header.developer_id;
     if (self.extended_header == null) {
-        table_index = ((self.header.developer_id >> 4) * 36) + (self.header.developer_id & 0x0f);
+        table_index = ((dev_id_usize >> 4) * 36) + (dev_id_usize & 0x0f);
     } else {
         for (self.extended_header.?.maker_code, 0..) |byte, i| {
             // `maker_code` has already been verified to be printable ASCII in `SnesRomExtendedHeader.fromBin`

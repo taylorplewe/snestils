@@ -83,11 +83,11 @@ fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsErro
     }
 }
 
-fn displayInfo(allocator: *const std.mem.Allocator) void {
-    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
+fn displayInfo(io: std.Io, allocator: *const std.mem.Allocator) void {
+    const rom_file = std.Io.Dir.cwd().openFile(io, args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
 
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var rom_reader_core = rom_file.reader(&reader_buf);
+    var rom_reader_core = rom_file.reader(io, &reader_buf);
     var rom_reader = &rom_reader_core.interface;
 
     const rom_bin = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not allocate buffer for ROM file");

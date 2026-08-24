@@ -120,26 +120,26 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn patch(allocator: *const std.mem.Allocator) void {
+fn patch(io: std.Io, allocator: *const std.mem.Allocator) void {
     // patch file I/O
     const patch_path_ext = args.patch_path[((std.mem.lastIndexOfScalar(u8, args.patch_path, '.') orelse args.patch_path.len) + 1)..];
     const patch_file_format = std.meta.stringToEnum(PatchFormat, patch_path_ext) orelse fatalFmt("unsupported patch file extension \x1b[1m{s}\x1b[0m", .{patch_path_ext});
-    const patch_file = std.fs.cwd().openFile(args.patch_path, .{ .mode = .read_only }) catch fatalFmt("could not open patch file \x1b[1m{s}\x1b[0m", .{args.patch_path});
+    const patch_file = std.Io.Dir.cwd().openFile(io, args.patch_path, .{ .mode = .read_only }) catch fatalFmt("could not open patch file \x1b[1m{s}\x1b[0m", .{args.patch_path});
     var patch_reader_buf: [2048]u8 = undefined;
-    var patch_file_reader = patch_file.reader(&patch_reader_buf);
+    var patch_file_reader = patch_file.reader(io, &patch_reader_buf);
     var patch_reader = &patch_file_reader.interface;
     const patch_buf = patch_reader.allocRemaining(allocator.*, .limited(MAX_ALLOC_SIZE)) catch fatal("could not allocate buffer from patch file");
 
     // original ROM I/O
-    const original_rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open original ROM file \x1b[1m{s}\x1b[0m", .{args.rom_path});
+    const original_rom_file = std.Io.Dir.cwd().openFile(io, args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open original ROM file \x1b[1m{s}\x1b[0m", .{args.rom_path});
     var original_rom_reader_buf: [2048]u8 = undefined;
-    var original_rom_file_reader = original_rom_file.reader(&original_rom_reader_buf);
+    var original_rom_file_reader = original_rom_file.reader(io, &original_rom_reader_buf);
     var original_rom_reader = &original_rom_file_reader.interface;
     const original_rom_buf = original_rom_reader.allocRemaining(allocator.*, .limited(MAX_ALLOC_SIZE)) catch fatal("could not allocate buffer from original ROM file");
 
     defer {
-        patch_file.close();
-        original_rom_file.close();
+        patch_file.close(io);
+        original_rom_file.close(io);
     }
 
     var patcher: Patcher = switch (patch_file_format) {
@@ -157,11 +157,11 @@ fn patch(allocator: *const std.mem.Allocator) void {
     disp.clearLine();
 
     disp.printLoading("writing patched data to out file");
-    const patched_rom_file = if (args.overwrite) original_rom_file else std.fs.cwd().createFile(args.out_path, .{}) catch fatalFmt("could not open out file {s}", .{args.out_path});
+    const patched_rom_file = if (args.overwrite) original_rom_file else std.Io.Dir.cwd().createFile(io, args.out_path, .{}) catch fatalFmt("could not open out file {s}", .{args.out_path});
     var patched_rom_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var patched_rom_file_writer = patched_rom_file.writer(&patched_rom_writer_buf);
+    var patched_rom_file_writer = patched_rom_file.writer(io, &patched_rom_writer_buf);
     var patched_rom_writer = &patched_rom_file_writer.interface;
     patched_rom_writer.writeAll(patcher.patched_rom.items) catch fatal("could not write patched ROM buffer to file");
     disp.clearLine();
-    disp.printf("\n\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{args.out_path});
+    disp.printf("\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{args.out_path});
 }

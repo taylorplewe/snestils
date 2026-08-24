@@ -95,12 +95,12 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn fixChecksum(allocator: *const std.mem.Allocator) void {
-    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
-    defer rom_file.close();
+fn fixChecksum(io: std.Io, allocator: *const std.mem.Allocator) void {
+    const rom_file = std.Io.Dir.cwd().openFile(io, args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
+    defer rom_file.close(io);
 
     var reader_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var rom_reader_core = rom_file.reader(&reader_buf);
+    var rom_reader_core = rom_file.reader(io, &reader_buf);
     var rom_reader = &rom_reader_core.interface;
 
     const rom_bin = rom_reader.allocRemaining(allocator.*, .limited(std.math.maxInt(u32))) catch fatal("could not read ROM file into buffer for checksum fixing");
@@ -114,16 +114,22 @@ fn fixChecksum(allocator: *const std.mem.Allocator) void {
 
     // write checksum to ROM header
     disp.printLoading("writing checksum to ROM header");
-    const out_file: std.fs.File = blk: {
+    const out_file: std.Io.File = blk: {
         if (!args.overwrite and !std.mem.eql(u8, args.rom_path, args.out_path)) {
-            std.fs.cwd().copyFile(args.rom_path, std.fs.cwd(), args.out_path, .{}) catch fatalFmt("could not copy file {s} to {s}", .{ args.rom_path, args.out_path });
-            break :blk std.fs.cwd().openFile(args.out_path, .{ .mode = .write_only }) catch fatalFmt("could not open out file {s}", .{args.out_path});
+            std.Io.Dir.cwd().copyFile(
+                args.rom_path,
+                std.Io.Dir.cwd(),
+                args.out_path,
+                io,
+                .{},
+            ) catch fatalFmt("could not copy file {s} to {s}", .{ args.rom_path, args.out_path });
+            break :blk std.Io.Dir.cwd().openFile(io, args.out_path, .{ .mode = .write_only }) catch fatalFmt("could not open out file {s}", .{args.out_path});
         } else {
             break :blk rom_file;
         }
     };
     var out_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var out_file_writer = out_file.writer(&out_writer_buf);
+    var out_file_writer = out_file.writer(io, &out_writer_buf);
     var out_writer = &out_file_writer.interface;
 
     out_file_writer.seekTo(rom.header_addr + 0x1c) catch fatal("could not seek file for writing calculated checksum");
@@ -139,8 +145,14 @@ test fixChecksum {
     // arrange
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
-    try std.fs.cwd().copyFile("src/shared/testing/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    try std.Io.Dir.cwd().copyFile(
+        "src/shared/testing/sutah.sfc",
+        tmp_dir.dir,
+        "sutah.sfc",
+        std.testing.io,
+        .{},
+    );
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.goodchecksum.sfc" });
     args = .{
@@ -157,11 +169,16 @@ test fixChecksum {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    fixChecksum(&arena.allocator());
+    fixChecksum(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert
-    const new_rom_bin = try shared.testing.getBinFromFilePath(&allocator, &tmp_dir.dir, "sutah.goodchecksum.sfc");
+    const new_rom_bin = try shared.testing.getBinFromFilePath(
+        std.testing.io,
+        &allocator,
+        &tmp_dir.dir,
+        "sutah.goodchecksum.sfc",
+    );
     defer allocator.free(new_rom_bin);
     var new_rom = try shared.SnesRom.fromBin(new_rom_bin);
     const good_checksum = new_rom.getCalculatedChecksum();

@@ -50,18 +50,17 @@ const utils = [_]Util{
     help_util,
 };
 
-pub fn main() void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
+pub fn main(init: std.process.Init) void {
+    disp.io = init.io;
 
     const args: [][:0]u8 = blk: {
         var kept_args: std.ArrayList([:0]u8) = .empty;
-        var args_it = std.process.argsWithAllocator(arena.allocator()) catch fatal("could not allocate memory for args iterator");
+        var args_it = init.minimal.args.iterateAllocator(init.arena.allocator()) catch fatal("could not allocate memory for args iterator");
         while (args_it.next()) |arg| {
             if (std.mem.eql(u8, arg, "--quiet")) {
                 disp.quiet = true;
             } else {
-                kept_args.append(arena.allocator(), @constCast(arg)) catch fatal("could not allocate memory for next argument");
+                kept_args.append(init.arena.allocator(), @constCast(arg)) catch fatal("could not allocate memory for next argument");
             }
         }
         break :blk kept_args.items;
@@ -80,19 +79,19 @@ pub fn main() void {
 
             const util_kind: UtilKind = std.meta.stringToEnum(UtilKind, util_name) orelse .info;
             const util = utils[@intFromEnum(util_kind)];
-            util.do(&arena.allocator(), if (util_kind == .info) args[1..2] else &.{});
+            util.do(init.io, &init.arena.allocator(), if (util_kind == .info) args[1..2] else &.{});
         },
         else => {
             const util_name = args[1];
 
             const util_kind = std.meta.stringToEnum(UtilKind, util_name) orelse fatalFmt("no util found with name \x1b[1m{s}\x1b[0m\n", .{util_name});
             const util = utils[@intFromEnum(util_kind)];
-            util.do(&arena.allocator(), args[2..]);
+            util.do(init.io, &init.arena.allocator(), args[2..]);
         },
     }
 }
 
-fn printHelp(_: *const std.mem.Allocator) void {
+fn printHelp(_: std.Io, _: *const std.mem.Allocator) void {
     usage.printAndExit();
 }
 const help_util: Util = .{

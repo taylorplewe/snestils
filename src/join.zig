@@ -90,17 +90,17 @@ fn parseArgs(allocator: *const std.mem.Allocator, args_raw: [][:0]u8) Util.Parse
     }
 }
 
-fn join(allocator: *const std.mem.Allocator) void {
+fn join(io: std.Io, allocator: *const std.mem.Allocator) void {
     var joined_writer: std.Io.Writer.Allocating = .init(allocator.*);
     defer joined_writer.deinit();
 
     disp.printLoading("reading input files into joined data buffer");
     var file_stream_buf: [std.math.maxInt(u16)]u8 = undefined;
     for (args.in_paths) |path| {
-        var in_file = std.fs.cwd().openFile(path, .{ .mode = .read_only }) catch fatalFmt("could not open input file \x1b[1m{s}\x1b[0m", .{path});
-        defer in_file.close();
+        var in_file = std.Io.Dir.cwd().openFile(io, path, .{ .mode = .read_only }) catch fatalFmt("could not open input file \x1b[1m{s}\x1b[0m", .{path});
+        defer in_file.close(io);
 
-        var in_file_reader = in_file.readerStreaming(&file_stream_buf);
+        var in_file_reader = in_file.readerStreaming(io, &file_stream_buf);
         var in_reader = &in_file_reader.interface;
 
         _ = in_reader.streamRemaining(&joined_writer.writer) catch fatalFmt("could not stream data from {s} to joined data buffer writer", .{path});
@@ -108,9 +108,9 @@ fn join(allocator: *const std.mem.Allocator) void {
     disp.clearLine();
 
     disp.printLoading("writing joined data to output file");
-    const joined_rom_file = std.fs.cwd().createFile(args.out_path, .{}) catch fatalFmt("could not open out file {s}", .{args.out_path});
+    const joined_rom_file = std.Io.Dir.cwd().createFile(io, args.out_path, .{}) catch fatalFmt("could not open out file {s}", .{args.out_path});
     var joined_rom_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var joined_rom_file_writer = joined_rom_file.writer(&joined_rom_writer_buf);
+    var joined_rom_file_writer = joined_rom_file.writer(io, &joined_rom_writer_buf);
     var joined_rom_writer = &joined_rom_file_writer.interface;
     joined_rom_writer.writeAll(joined_writer.written()) catch fatal("could not write joined ROM buffer to file");
     disp.clearLine();
@@ -123,7 +123,7 @@ test join {
     const joined_rom_crc32 = std.hash.Crc32.hash(joined_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     var in_paths: std.ArrayList([:0]const u8) = .empty;
     inline for ([_][]const u8{
         "sutah.split_00.sfc",
@@ -131,7 +131,13 @@ test join {
         "sutah.split_02.sfc",
         "sutah.split_03.sfc",
     }) |path| {
-        try std.fs.cwd().copyFile("src/shared/testing/" ++ path, tmp_dir.dir, path, .{});
+        try std.Io.Dir.cwd().copyFile(
+            "src/shared/testing/" ++ path,
+            tmp_dir.dir,
+            path,
+            std.testing.io,
+            .{},
+        );
         try in_paths.append(allocator, try std.fs.path.joinZ(allocator, &.{ tmp_path, path }));
     }
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.joined.sfc" });
@@ -151,11 +157,16 @@ test join {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    join(&arena.allocator());
+    join(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert
-    const new_rom_bin = try shared.testing.getBinFromFilePath(&allocator, &tmp_dir.dir, "sutah.joined.sfc");
+    const new_rom_bin = try shared.testing.getBinFromFilePath(
+        std.testing.io,
+        &allocator,
+        &tmp_dir.dir,
+        "sutah.joined.sfc",
+    );
     defer allocator.free(new_rom_bin);
     const new_rom_crc32 = std.hash.Crc32.hash(new_rom_bin);
     try std.testing.expectEqual(joined_rom_crc32, new_rom_crc32);
