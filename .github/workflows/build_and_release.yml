@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: mlugg/setup-zig@v2
         with:
-          version: 0.15.2
+          version: 0.16.0
       - run: zig build --release=fast -Drelease=true -Dtarget=${{ matrix.target }}
       - if: endsWith(matrix.target, 'windows')
         run: zip snestils-${{ inputs.tag }}-${{ matrix.target }}.zip -j zig-out/bin/snestils.exe
@@ -35,7 +35,7 @@ jobs:
         with:
           name: artifact-${{ matrix.target }}
           path: snestils-*
-        
+
   release:
     needs: build
     name: Publish release v${{ inputs.tag }}
