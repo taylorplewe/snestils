@@ -51,6 +51,8 @@ const utils = [_]Util{
 };
 
 pub fn main(init: std.process.Init) void {
+    disp.io = init.io;
+
     const args: [][:0]u8 = blk: {
         var kept_args: std.ArrayList([:0]u8) = .empty;
         var args_it = init.minimal.args.iterateAllocator(init.arena.allocator()) catch fatal("could not allocate memory for args iterator");

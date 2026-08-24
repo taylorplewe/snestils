@@ -99,7 +99,7 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
                 disp.println("What size KiB chunks (512, 1024, or 2048)? ");
                 var targ_size_input: []u8 = undefined;
                 targ_size_input = stdin.takeDelimiter('\n') catch fatal("could not read input from user") orelse &.{};
-                const input = std.fmt.parseInt(usize, std.mem.trimRight(u8, targ_size_input, " \n\r"), 10) catch {
+                const input = std.fmt.parseInt(usize, std.mem.trimEnd(u8, targ_size_input, " \n\r"), 10) catch {
                     disp.println("please provide a numeric value!");
                     continue;
                 };
@@ -112,7 +112,7 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
     } * 1024; // KiB
 
     // get file size
-    var remaining_size = rom_file.getEndPos() catch fatal("could not get size of file");
+    var remaining_size = rom_file.length(io) catch fatal("could not get size of file");
     if (remaining_size <= targ_size) {
         disp.printf("ROM file is already smaller or equal to {d} bytes!", .{targ_size});
         return;

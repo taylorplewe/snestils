@@ -163,5 +163,5 @@ fn patch(io: std.Io, allocator: *const std.mem.Allocator) void {
     var patched_rom_writer = &patched_rom_file_writer.interface;
     patched_rom_writer.writeAll(patcher.patched_rom.items) catch fatal("could not write patched ROM buffer to file");
     disp.clearLine();
-    disp.printf("\n\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{args.out_path});
+    disp.printf("\x1b[32mROM file successfully patched to \x1b[0;1m{s}\x1b[0;32m", .{args.out_path});
 }
