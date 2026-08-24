@@ -31,6 +31,9 @@ const remove_header_util = @import("remove_header.zig").remove_header_util;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
+const VERSION = "1.0.1";
+const COPY = "snestils (c) 2026 Taylor Plewe\nsource at: https://github.com/taylorplewe/snestils";
+
 const UtilKind = enum {
     info,
     @"fix-checksum",
@@ -39,6 +42,7 @@ const UtilKind = enum {
     join,
     @"remove-header",
     help,
+    version,
 };
 const utils = [_]Util{
     info_util,
@@ -48,6 +52,7 @@ const utils = [_]Util{
     join_util,
     remove_header_util,
     help_util,
+    version_util,
 };
 
 pub fn main(init: std.process.Init) void {
@@ -72,6 +77,8 @@ pub fn main(init: std.process.Init) void {
             const util_name = blk: {
                 if (std.mem.eql(u8, args[1], "-h") or std.mem.eql(u8, args[1], "--help")) {
                     break :blk "help";
+                } else if (std.mem.eql(u8, args[1], "-v") or std.mem.eql(u8, args[1], "--version")) {
+                    break :blk "version";
                 } else {
                     break :blk args[1];
                 }
@@ -94,11 +101,21 @@ pub fn main(init: std.process.Init) void {
 fn printHelp(_: std.Io, _: *const std.mem.Allocator) void {
     usage.printAndExit();
 }
+fn printVersion(_: std.Io, _: *const std.mem.Allocator) void {
+    disp.println(VERSION ++ "\n\n" ++ COPY);
+}
 
 const help_util: Util = .{
     .vtable = &.{
         .parseArgs = null,
         .do = printHelp,
+    },
+    .usage = null,
+};
+const version_util: Util = .{
+    .vtable = &.{
+        .parseArgs = null,
+        .do = printVersion,
     },
     .usage = null,
 };
@@ -121,6 +138,7 @@ const usage = Usage{
                 .{ .shorthand = "", .title = "join", .arg = "", .description = "join split binary chunks into a single ROM file" },
                 .{ .shorthand = "", .title = "remove-header", .arg = "", .description = "remove a ROM's 512-byte copier device header" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
+                .{ .shorthand = "-v", .title = "--version", .arg = "", .description = "print version and exit" },
             },
         },
     },
