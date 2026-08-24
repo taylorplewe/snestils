@@ -86,14 +86,14 @@ fn parseArgs(_: *const std.mem.Allocator, args_raw: [][:0]u8) Util.ParseArgsErro
 }
 
 fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
-    const rom_file = std.fs.cwd().openFile(args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
+    const rom_file = std.Io.Dir.cwd().openFile(io, args.rom_path, .{ .mode = .read_write }) catch fatalFmt("could not open file \x1b[1m{s}\x1b[0m", .{args.rom_path});
 
     // get size in KiB from user
     const targ_size = blk: {
         if (args.size == null) {
             while (true) {
                 var reader_buf: [1024]u8 = undefined;
-                var stdin_core = std.fs.File.stdin().reader(&reader_buf);
+                var stdin_core = std.Io.File.stdin().reader(io, &reader_buf);
                 var stdin = &stdin_core.interface;
 
                 disp.println("What size KiB chunks (512, 1024, or 2048)? ");
@@ -124,19 +124,19 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
     const rom_file_ext = args.rom_path[last_index_of_period..];
 
     var rom_reader_buf: [std.math.maxInt(u16)]u8 = undefined;
-    var rom_file_reader = rom_file.readerStreaming(&rom_reader_buf);
+    var rom_file_reader = rom_file.readerStreaming(io, &rom_reader_buf);
     var rom_reader = &rom_file_reader.interface;
 
     disp.printLoading("writing ROM data to split files");
     var iter: u8 = 0;
     while (remaining_size > 0) : (remaining_size -= targ_size) {
         const split_file_path = std.fmt.allocPrint(allocator.*, "{s}.split_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
-        const split_file = std.fs.cwd().createFile(split_file_path, .{}) catch
+        const split_file = std.Io.Dir.cwd().createFile(io, split_file_path, .{}) catch
             fatalFmt("could not create split file {s}", .{split_file_path});
-        defer split_file.close();
+        defer split_file.close(io);
 
         var split_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
-        var split_file_writer = split_file.writer(&split_writer_buf);
+        var split_file_writer = split_file.writer(io, &split_writer_buf);
 
         rom_reader.streamExact(&split_file_writer.interface, targ_size) catch fatalFmt("could not stream data from {s} to {s}", .{ args.rom_path, split_file_path });
         split_file_writer.interface.flush() catch fatalFmt("could not flush writer for file {s}", .{split_file_path});
@@ -153,7 +153,13 @@ test split {
     const split_rom_crc32 = std.hash.Crc32.hash(split_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
-    try std.fs.cwd().copyFile("src/shared/testing/sutah.sfc", tmp_dir.dir, "sutah.sfc", .{});
+    try std.Io.Dir.cwd().copyFile(
+        "src/shared/testing/sutah.sfc",
+        tmp_dir.dir,
+        "sutah.sfc",
+        std.testing.io,
+        .{},
+    );
     const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     args = .{
@@ -180,7 +186,12 @@ test split {
     }) |path| {
         try tmp_dir.dir.access(path, .{});
     }
-    const new_rom_bin = try shared.testing.getBinFromFilePath(&allocator, &tmp_dir.dir, "sutah.split_00.sfc");
+    const new_rom_bin = try shared.testing.getBinFromFilePath(
+        std.testing.io,
+        &allocator,
+        &tmp_dir.dir,
+        "sutah.split_00.sfc",
+    );
     defer allocator.free(new_rom_bin);
     const new_rom_crc32 = std.hash.Crc32.hash(new_rom_bin);
     try std.testing.expectEqual(split_rom_crc32, new_rom_crc32);
