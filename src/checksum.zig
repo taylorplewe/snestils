@@ -152,7 +152,7 @@ test fixChecksum {
         std.testing.io,
         .{},
     );
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.goodchecksum.sfc" });
     args = .{
@@ -169,7 +169,7 @@ test fixChecksum {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    fixChecksum(&arena.allocator());
+    fixChecksum(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert

@@ -160,7 +160,7 @@ test split {
         std.testing.io,
         .{},
     );
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.sfc" });
     args = .{
         .rom_path = rom_path,
@@ -174,7 +174,7 @@ test split {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    split(&arena.allocator());
+    split(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert
@@ -184,7 +184,7 @@ test split {
         "sutah.split_02.sfc",
         "sutah.split_03.sfc",
     }) |path| {
-        try tmp_dir.dir.access(path, .{});
+        try tmp_dir.dir.access(std.testing.io, path, .{});
     }
     const new_rom_bin = try shared.testing.getBinFromFilePath(
         std.testing.io,

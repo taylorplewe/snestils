@@ -143,7 +143,7 @@ test removeHeader {
         std.testing.io,
         .{},
     );
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     const rom_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.headered.sfc" });
     const out_path = try std.fs.path.join(allocator, &.{ tmp_path, "sutah.noheader.sfc" });
     args = .{
@@ -160,7 +160,7 @@ test removeHeader {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    removeHeader(&arena.allocator());
+    removeHeader(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert

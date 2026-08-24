@@ -123,7 +123,7 @@ test join {
     const joined_rom_crc32 = std.hash.Crc32.hash(joined_rom_bin);
     const allocator = std.testing.allocator;
     var tmp_dir = std.testing.tmpDir(.{});
-    const tmp_path = try tmp_dir.dir.realpathAlloc(allocator, ".");
+    const tmp_path = try tmp_dir.dir.realPathFileAlloc(std.testing.io, ".", allocator);
     var in_paths: std.ArrayList([:0]const u8) = .empty;
     inline for ([_][]const u8{
         "sutah.split_00.sfc",
@@ -157,7 +157,7 @@ test join {
 
     // act
     var arena = std.heap.ArenaAllocator.init(allocator);
-    join(&arena.allocator());
+    join(std.testing.io, &arena.allocator());
     arena.deinit();
 
     // assert
