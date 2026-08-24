@@ -28,6 +28,7 @@ const patch_util = @import("patch/patch.zig").patch_util;
 const split_util = @import("split.zig").split_util;
 const join_util = @import("join.zig").join_util;
 const remove_header_util = @import("remove_header.zig").remove_header_util;
+const add_header_util = @import("add_header.zig").add_header_util;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
@@ -41,6 +42,7 @@ const UtilKind = enum {
     patch,
     join,
     @"remove-header",
+    @"add-header",
     help,
     version,
 };
@@ -51,6 +53,7 @@ const utils = [_]Util{
     patch_util,
     join_util,
     remove_header_util,
+    add_header_util,
     help_util,
     version_util,
 };
@@ -137,6 +140,7 @@ const usage = Usage{
                 .{ .shorthand = "", .title = "split", .arg = "", .description = "split a ROM file into multiple smaller files" },
                 .{ .shorthand = "", .title = "join", .arg = "", .description = "join split binary chunks into a single ROM file" },
                 .{ .shorthand = "", .title = "remove-header", .arg = "", .description = "remove a ROM's 512-byte copier device header" },
+                .{ .shorthand = "", .title = "add-header", .arg = "", .description = "add a dummy 512-byte copier device header full of 0's" },
                 .{ .shorthand = "-h", .title = "--help", .arg = "", .description = "print this help message and exit" },
                 .{ .shorthand = "-v", .title = "--version", .arg = "", .description = "print version and exit" },
             },

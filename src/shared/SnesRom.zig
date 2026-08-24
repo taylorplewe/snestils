@@ -268,11 +268,12 @@ pub inline fn hasCopierHeader(self: *SnesRom) bool {
 
 pub fn getCalculatedChecksum(self: *SnesRom) u16 {
     var checksum: u16 = 0;
-    for (self.bin) |byte| {
+    const bin = if (self.hasCopierHeader()) self.bin[512..] else self.bin;
+    for (bin) |byte| {
         checksum +%= byte;
     }
 
-    var must_mirror = self.bin.len & (self.bin.len - 1) != 0;
+    var must_mirror = bin.len & (bin.len - 1) != 0;
 
     // special cases for certain games (Far East of Eden Zero and Momotaro Dentetsu Happy)
     if (self.header.chipset == .RomSpc7110RamBatteryRtc) {
@@ -284,11 +285,11 @@ pub fn getCalculatedChecksum(self: *SnesRom) u16 {
 
     // ROM size must be a power of 2 for checksum calculation; a portion might have to be duplicated
     if (must_mirror) {
-        // find the largest power of 2 less than or equal to self.bin.len
+        // find the largest power of 2 less than or equal to `bin.len`
         var power_of_2: usize = 1024 * 1024 * 8; // 8MB; biggest game ever released was 6MB
-        while (power_of_2 > self.bin.len) power_of_2 >>= 1;
-        const duplicated_section = self.bin[power_of_2..];
-        const num_times_to_duplicate = (power_of_2 / (self.bin.len - power_of_2)) - 1;
+        while (power_of_2 > bin.len) power_of_2 >>= 1;
+        const duplicated_section = bin[power_of_2..];
+        const num_times_to_duplicate = (power_of_2 / (bin.len - power_of_2)) - 1;
         for (0..num_times_to_duplicate) |_| {
             for (duplicated_section) |byte| {
                 checksum +%= byte;
@@ -311,7 +312,8 @@ pub inline fn getInternalRamSizeKilobits(self: *SnesRom) u32 {
     return self.getInternalRamSizeKilobytes() * 8;
 }
 pub inline fn getPhysicalRomSizeMegabits(self: *SnesRom) f32 {
-    return (((@as(f32, @floatFromInt(self.bin.len)) * 8) / 1024) / 1024);
+    const bin: []const u8 = if (self.hasCopierHeader()) self.bin[512..] else self.bin;
+    return (((@as(f32, @floatFromInt(bin.len)) * 8) / 1024) / 1024);
 }
 
 test SnesRomHeader {
