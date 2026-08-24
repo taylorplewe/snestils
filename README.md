@@ -22,7 +22,7 @@ For the time being, this project is licensed under the GNU General Public Licens
 - [SNESdev Wiki](https://snes.nesdev.org), particularly the pages:
   - [ROM header](https://snes.nesdev.org/wiki/ROM_header)
   - [ROM file formats](https://snes.nesdev.org/wiki/ROM_file_formats)
-- [mousebitelabs.com](mousebitelabs.com)
+- [mousebitelabs.com](https://mousebitelabs.com)
 - [ucon64](https://ucon64.sourceforge.io/)
 - [Nocash's fullsnes documentation](https://problemkaputt.de/fullsnes.htm)
 - [termshot](https://github.com/homeport/termshot) for the terminal screenshots
