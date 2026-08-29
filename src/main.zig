@@ -32,7 +32,7 @@ const add_header_util = @import("add_header.zig").add_header_util;
 const Usage = @import("Usage.zig");
 const Util = @import("Util.zig");
 
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 const COPY = "snestils (c) 2026 Taylor Plewe\nsource at: https://github.com/taylorplewe/snestils";
 
 const UtilKind = enum {
