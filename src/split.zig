@@ -90,7 +90,9 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
 
     // get size in KiB from user
     const targ_size = blk: {
-        if (args.size == null) {
+        if (args.size) |size| {
+            break :blk size;
+        } else {
             while (true) {
                 var reader_buf: [1024]u8 = undefined;
                 var stdin_core = std.Io.File.stdin().reader(io, &reader_buf);
@@ -106,8 +108,6 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
                 if (input == 512 or input == 1024 or input == 2048) break :blk input;
                 disp.println("please provide a valid KiB size!");
             }
-        } else {
-            break :blk args.size.?;
         }
     } * 1024; // KiB
 
@@ -129,7 +129,7 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
 
     disp.printLoading("writing ROM data to split files");
     var iter: u8 = 0;
-    while (remaining_size > 0) : (remaining_size -= targ_size) {
+    while (remaining_size > 0) : (remaining_size -|= targ_size) {
         const split_file_path = std.fmt.allocPrint(allocator.*, "{s}.split_{d:0>2}{s}", .{ rom_file_name_base, iter, rom_file_ext }) catch unreachable;
         const split_file = std.Io.Dir.cwd().createFile(io, split_file_path, .{}) catch
             fatalFmt("could not create split file {s}", .{split_file_path});
@@ -138,7 +138,8 @@ fn split(io: std.Io, allocator: *const std.mem.Allocator) void {
         var split_writer_buf: [std.math.maxInt(u16)]u8 = undefined;
         var split_file_writer = split_file.writer(io, &split_writer_buf);
 
-        rom_reader.streamExact(&split_file_writer.interface, targ_size) catch fatalFmt("could not stream data from {s} to {s}", .{ args.rom_path, split_file_path });
+        const amount_to_stream: usize = @min(remaining_size, targ_size);
+        rom_reader.streamExact(&split_file_writer.interface, amount_to_stream) catch fatalFmt("could not stream data from {s} to {s}", .{ args.rom_path, split_file_path });
         split_file_writer.interface.flush() catch fatalFmt("could not flush writer for file {s}", .{split_file_path});
 
         iter += 1;
